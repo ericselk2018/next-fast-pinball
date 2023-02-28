@@ -17,7 +17,7 @@ const HardwareContext = createContext<HardwareContext>(null!);
 
 export const HardwareContextProvider = ({ children }: { children: ReactNode }) => {
 	const [lastError, setLastError] = useState<Error>();
-	const [received, setReceived] = useState('');
+	const [received, setReceived] = useState(''); // change to useRef
 	const [switches, setSwitches] = useState(switchInfo);
 	const [permissionRequired, setPermissionRequired] = useState(false);
 	const [usingVirtualHardware, setUsingVirtualHardware] = useState(false);
