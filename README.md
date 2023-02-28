@@ -52,6 +52,14 @@ The current player, a 0 based index, a simple number.
 
 Open/closed flags for each switch and also a lit/hit state. This is also maintained by the hardware (when not in virtual mode), but we keep a local copy in sync with hardware to avoid having to query the hardware, and so we can trigger hooks when state changes.
 
+### Players
+
+List of players in the game.
+
+### Credits
+
+Number of credits available (not spent).
+
 ## Folder Structure
 
 ### app
