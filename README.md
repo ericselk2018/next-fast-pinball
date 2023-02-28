@@ -1,5 +1,57 @@
 # Pinball
 
+## State
+
+There actually isn't a lot of state information in many pinball games, including this one. All state is explained here.
+
+### Player
+
+This state is saved per player.
+
+#### Score
+
+Each player has a score, a simple number.
+
+#### Balls Total
+
+Each player has a count of total balls for the game -- increases if they achieve an extra ball.
+
+#### Balls Used
+
+The number of balls, from total, that player has used. When used reaches total, no additional balls will be given, game over for player when balls drain.
+
+#### Initials
+
+List of player initials currently playing - can't change during game. Just used for achievement tracking.
+
+#### Modes Completed
+
+Simple list of mode names completed by each player for current game.
+
+### Current Mode
+
+The current mode being played, a simple string equal to the name of the mode. Might change to an ID based system when adding achievement tracking, so that achievements persist if names are changed.
+
+### Current Mode Step Tasks Completed
+
+Tasks completed for the current mode - mode name, step name, and switch number.
+
+### Shot Tracker
+
+TBD - some info to support combo shot tracking (if it cannot be tracked based on light/switch status), and also a UI component that shows points earned and special bonus points like "+10,000 Combo Shot Bonus". Maybe the UI shows points flying by as you get them, like the numbers when you shoot an enemy in Apex Legends.
+
+### Current Video Playing
+
+When certain things happen like a goal being completed, or a combo shot hit, a video will play. Like most things in React, this is done with a state update.
+
+### Current Player
+
+The current player, a 0 based index, a simple number.
+
+### Switches
+
+Open/closed flags for each switch and also a lit/hit state. This is also maintained by the hardware (when not in virtual mode), but we keep a local copy in sync with hardware to avoid having to query the hardware, and so we can trigger hooks when state changes.
+
 ## Folder Structure
 
 ### app

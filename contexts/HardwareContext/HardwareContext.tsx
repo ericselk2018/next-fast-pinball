@@ -60,6 +60,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					};
 					setSwitches((switches) => switches.map((s) => new Switch({ switch: s, open: getOpen(s) })));
 				} else if (line.startsWith('/L:') || line.startsWith('-L:')) {
+					// TODO: we could miss a switch hit here, if it toggles on/off in the same render.  Any hooks
+					//  tracking this would not be fired because the value would be the same on the next render,
+					//  but it did actually quickly toggle on/off.
+					//  Probably will fix by adding the needed hit/lit state, because that will not toggle on/off quickly.
 					const open = line[0] === '/';
 					const number = parseInt(line.substring('/L:'.length), 16);
 					setSwitches((switches) =>
