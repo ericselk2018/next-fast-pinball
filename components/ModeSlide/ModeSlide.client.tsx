@@ -2,7 +2,7 @@
 import GameContext from '@/contexts/GameContext/GameContext.client';
 import Mode from '@/entities/Mode/Mode';
 import { useContext, useEffect, useRef } from 'react';
-import Slide from '../Slide/Slide.client';
+import Slide from '../Slides/Slide/Slide.client';
 import * as S from './ModeSlide.styles';
 
 interface Props {
