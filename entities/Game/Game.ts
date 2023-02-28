@@ -1,21 +1,24 @@
+import { replaceItemAtIndex } from '@/lib/array/array';
 import Player from '../Player/Player';
 
 export default class Game {
 	private _players: Player[];
 	private _startingBallsPerPlayer = 4;
 	private _currentPlayerIndex = 0;
+	private _update: (game: Game) => void;
 
-	constructor(args: { playerCount: number }) {
-		const { playerCount } = args;
-		this._players = Array.from(Array(playerCount)).map(() => new Player());
+	constructor(args: { playerCount: number; update: (game: Game) => void }) {
+		const { playerCount, update } = args;
+		this._update = update;
+		this._players = Array.from(Array(playerCount)).map(
+			(_, index) => new Player({ update: (player) => this.updatePlayer({ index, player }) })
+		);
 	}
 
-	public addPlayer = () => {
-		this._players.push({
-			...new Player(),
-			ballsRemaining: this._startingBallsPerPlayer,
-		});
-	};
+	private updatePlayer(args: { index: number; player: Player }) {
+		const { index, player } = args;
+		this._update({ ...this, _players: replaceItemAtIndex({ array: this._players, index, item: player }) });
+	}
 
 	public get currentPlayer() {
 		return this._players[this._currentPlayerIndex];

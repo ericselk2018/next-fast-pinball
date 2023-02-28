@@ -1,3 +1,4 @@
+import modes from '@/const/Modes/Modes';
 import { leftFlipperButtonSwitch, rightFlipperButtonSwitch } from '@/const/Switches/Switches';
 import GameContext from '@/contexts/GameContext/GameContext.client';
 import { useSwitchHit } from '@/contexts/HardwareContext/HardwareContext';
@@ -8,7 +9,6 @@ import * as S from './ModeSelect.styles';
 const ModeSelect = () => {
 	const { game, activeModeIndex, setActiveModeIndex } = useContext(GameContext);
 	const { currentPlayer } = game;
-	const { modes } = currentPlayer;
 
 	// go to next mode on right flipper button hit
 	useSwitchHit({

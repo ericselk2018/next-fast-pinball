@@ -1,9 +1,16 @@
-import Mode from '../Mode/Mode';
-import allModes from '../../const/Modes/Modes';
-
 export default class Player {
-	score = 0;
-	ballsRemaining = 0;
-	ballsUsed = 0;
-	modes: Mode[] = allModes;
+	private _score = 0;
+	private _ballsRemaining = 0;
+	private _ballsUsed = 0;
+	private _modesCompleted: string[] = [];
+	private _update: (player: Player) => void;
+
+	constructor(args: { update: (player: Player) => void }) {
+		const { update } = args;
+		this._update = update;
+	}
+
+	public set score(value: number) {
+		this._update({ ...this, _score: value });
+	}
 }

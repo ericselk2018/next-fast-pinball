@@ -1,6 +1,6 @@
 import GameContext from '@/contexts/GameContext/GameContext.client';
 import Mode from '@/entities/Mode/Mode';
-import { useContext, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import Slide from '../Slide/Slide.client';
 import * as S from './Play.styles';
 
@@ -9,14 +9,9 @@ interface Props {
 }
 
 const Play = (props: Props) => {
-	const { game } = useContext(GameContext);
-	const { currentPlayer } = game;
 	const { mode } = props;
 	const { name, steps } = mode;
 	const videoElement = useRef<HTMLVideoElement>(null);
-	const playerMode = currentPlayer.modes.find((m) => m.name === mode.name);
-	const firstNotCompleteStepIndex = playerMode?.steps.findIndex((step) => !step.complete);
-	const activeStepIndex = firstNotCompleteStepIndex && firstNotCompleteStepIndex > 0 ? firstNotCompleteStepIndex : 0;
 	const [video] = useState('');
 
 	return (
@@ -27,9 +22,9 @@ const Play = (props: Props) => {
 					<S.Left>
 						<S.Steps>
 							{steps.map((step, index) => {
-								const { name, complete } = step;
+								const { name } = step;
 								return (
-									<S.Step key={index} complete={complete} active={activeStepIndex === index}>
+									<S.Step key={index} complete={false} active={false}>
 										{name}
 									</S.Step>
 								);

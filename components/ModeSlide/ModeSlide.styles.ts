@@ -31,41 +31,7 @@ export const Steps = styled.ol`
 	list-style-position: inside;
 `;
 
-export const completeStep = css`
-	@keyframes strike {
-		0% {
-			width: 0;
-		}
-		100% {
-			width: 100%;
-		}
-	}
-
-	::after {
-		content: '';
-		position: absolute;
-		top: 50%;
-		left: 0;
-		width: 100%;
-		height: 0.1em;
-		background: red;
-		animation-name: strike;
-		animation-duration: 1s;
-		animation-timing-function: linear;
-		animation-iteration-count: 1;
-		animation-fill-mode: forwards;
-	}
-`;
-
-export const Step = styled.li(
-	({ complete, active }: { complete: boolean; active: boolean }) => `
-	position: relative;
-	width: fit-content;
-	opacity: ${active ? '1' : '0.5'};
-
-	${complete ? completeStep : ``}
-`
-);
+export const Step = styled.li``;
 
 export const VideoContainer = styled.div`
 	position: relative;

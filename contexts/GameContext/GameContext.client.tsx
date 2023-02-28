@@ -1,3 +1,4 @@
+import modes from '@/const/Modes/Modes';
 import { inlaneSwitch } from '@/const/Switches/Switches';
 import Game from '@/entities/Game/Game';
 import Mode from '@/entities/Mode/Mode';
@@ -15,7 +16,7 @@ interface GameContext {
 const GameContext = createContext<GameContext>(null!);
 
 export const GameContextProvider = ({ children, playerCount }: { children: ReactNode; playerCount: number }) => {
-	const game = useMemo(() => new Game({ playerCount }), [playerCount]);
+	const [_game, setGame] = useState<Game>();
 	const [activeModeIndex, setActiveModeIndex] = useState(0);
 	const [ballsInPlay, setBallsInPlay] = useState(0);
 
@@ -27,9 +28,11 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 	});
 
 	const activeMode = useMemo(
-		() => (ballsInPlay ? game.currentPlayer.modes[activeModeIndex] : undefined),
-		[activeModeIndex, ballsInPlay, game.currentPlayer.modes]
+		() => (ballsInPlay ? modes[activeModeIndex] : undefined),
+		[activeModeIndex, ballsInPlay]
 	);
+
+	const game = useMemo(() => _game || new Game({ playerCount, update: setGame }), [_game, playerCount]);
 
 	const context: GameContext = useMemo(
 		() => ({

@@ -12,13 +12,9 @@ interface Props {
 
 const ModeSlide = (props: Props) => {
 	const { game } = useContext(GameContext);
-	const { currentPlayer } = game;
 	const { active, mode } = props;
 	const { name, steps, video } = mode;
 	const videoElement = useRef<HTMLVideoElement>(null);
-	const playerMode = currentPlayer.modes.find((m) => m.name === mode.name);
-	const firstNotCompleteStepIndex = playerMode?.steps.findIndex((step) => !step.complete);
-	const activeStepIndex = firstNotCompleteStepIndex && firstNotCompleteStepIndex > 0 ? firstNotCompleteStepIndex : 0;
 
 	useEffect(() => {
 		if (videoElement.current) {
@@ -39,12 +35,8 @@ const ModeSlide = (props: Props) => {
 					<S.Left>
 						<S.Steps>
 							{steps.map((step, index) => {
-								const { name, complete } = step;
-								return (
-									<S.Step key={index} complete={complete} active={activeStepIndex === index}>
-										{name}
-									</S.Step>
-								);
+								const { name } = step;
+								return <S.Step key={index}>{name}</S.Step>;
 							})}
 						</S.Steps>
 					</S.Left>
