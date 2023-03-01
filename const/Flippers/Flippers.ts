@@ -1,21 +1,26 @@
-import Flipper from '../../entities/Flipper/Flipper';
 import {
 	leftFlipperButtonSwitch,
-	leftFlipperEndOfStroke,
+	leftFlipperEndOfStrokeSwitch,
 	rightFlipperButtonSwitch,
-	rightFlipperEndOfStroke,
+	rightFlipperEndOfStrokeSwitch,
+	SwitchInfo,
 } from '../Switches/Switches';
 
-export const leftFlipper = new Flipper({
+export interface FlipperInfo {
+	readonly buttonSwitch: SwitchInfo;
+	readonly endOfStrokeSwitch: SwitchInfo;
+}
+
+export const leftFlipper: FlipperInfo = {
 	buttonSwitch: leftFlipperButtonSwitch,
-	endOfStrokeSwitch: leftFlipperEndOfStroke,
-});
+	endOfStrokeSwitch: leftFlipperEndOfStrokeSwitch,
+};
 
-export const rightFlipper = new Flipper({
+export const rightFlipper: FlipperInfo = {
 	buttonSwitch: rightFlipperButtonSwitch,
-	endOfStrokeSwitch: rightFlipperEndOfStroke,
-});
+	endOfStrokeSwitch: rightFlipperEndOfStrokeSwitch,
+};
 
-const flippers: Flipper[] = [leftFlipper, rightFlipper];
+const flippers: ReadonlyArray<FlipperInfo> = [leftFlipper, rightFlipper];
 
 export default flippers;

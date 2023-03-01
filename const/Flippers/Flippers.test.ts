@@ -1,8 +1,8 @@
 import {
 	leftFlipperButtonSwitch,
-	leftFlipperEndOfStroke,
+	leftFlipperEndOfStrokeSwitch,
 	rightFlipperButtonSwitch,
-	rightFlipperEndOfStroke,
+	rightFlipperEndOfStrokeSwitch,
 } from '../Switches/Switches';
 import flippers, { leftFlipper, rightFlipper } from './Flippers';
 
@@ -18,7 +18,7 @@ describe('Flippers', () => {
 
 	describe('leftFlipper', () => {
 		it('should have correct end of stroke switch', () => {
-			expect(leftFlipper.endOfStrokeSwitch).toBe(leftFlipperEndOfStroke);
+			expect(leftFlipper.endOfStrokeSwitch).toBe(leftFlipperEndOfStrokeSwitch);
 		});
 		it('should have correct button switch', () => {
 			expect(leftFlipper.buttonSwitch).toBe(leftFlipperButtonSwitch);
@@ -27,7 +27,7 @@ describe('Flippers', () => {
 
 	describe('rightFlipper', () => {
 		it('should have correct end of stroke switch', () => {
-			expect(rightFlipper.endOfStrokeSwitch).toBe(rightFlipperEndOfStroke);
+			expect(rightFlipper.endOfStrokeSwitch).toBe(rightFlipperEndOfStrokeSwitch);
 		});
 		it('should have correct button switch', () => {
 			expect(rightFlipper.buttonSwitch).toBe(rightFlipperButtonSwitch);

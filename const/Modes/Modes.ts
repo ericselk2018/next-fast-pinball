@@ -1,28 +1,48 @@
-import ModeTask from '@/entities/ModeTask/ModeTask';
-import Mode from '../../entities/Mode/Mode';
-import ModeStep from '../../entities/ModeStep/ModeStep';
-import { carSwitches, driverSwitches, hideSwitches, stuntSwitches, truckSwitches } from '../Switches/Switches';
+import {
+	carSwitches,
+	driverSwitches,
+	hideSwitches,
+	stuntSwitches,
+	SwitchInfo,
+	truckSwitches,
+} from '../Switches/Switches';
 
-export const boostCarsMode = new Mode({
+export interface ModeStepTaskInfo {
+	readonly switches: ReadonlyArray<SwitchInfo>;
+	readonly count?: number;
+}
+
+export interface ModeStepInfo {
+	readonly name: string;
+	readonly tasks: ReadonlyArray<ModeStepTaskInfo>;
+}
+
+export interface ModeInfo {
+	readonly name: string;
+	readonly video: string;
+	readonly steps: ReadonlyArray<ModeStepInfo>;
+}
+
+export const boostCarsMode: ModeInfo = {
 	name: 'Boost Car',
 	video: 'boost-cars.mp4',
 	steps: [
-		new ModeStep({ name: 'Select Driver', tasks: [new ModeTask({ switches: driverSwitches })] }),
-		new ModeStep({ name: 'Boost Car', tasks: [new ModeTask({ switches: carSwitches })] }),
-		new ModeStep({ name: 'Hide Car', tasks: [new ModeTask({ switches: hideSwitches })] }),
+		{ name: 'Select Driver', tasks: [{ switches: driverSwitches }] },
+		{ name: 'Boost Car', tasks: [{ switches: carSwitches }] },
+		{ name: 'Hide Car', tasks: [{ switches: hideSwitches }] },
 	],
-});
+};
 
-export const truckHeistMode = new Mode({
+export const truckHeistMode: ModeInfo = {
 	name: 'Truck Heist',
 	video: 'truck-heist.mp4',
 	steps: [
-		new ModeStep({ name: 'Get Team', tasks: [new ModeTask({ switches: driverSwitches, count: 2 })] }),
-		new ModeStep({ name: 'Intercept Truck', tasks: [new ModeTask({ switches: truckSwitches })] }),
-		new ModeStep({ name: 'Insane Stunt', tasks: [new ModeTask({ switches: stuntSwitches })] }),
+		{ name: 'Get Team', tasks: [{ switches: driverSwitches, count: 2 }] },
+		{ name: 'Intercept Truck', tasks: [{ switches: truckSwitches }] },
+		{ name: 'Insane Stunt', tasks: [{ switches: stuntSwitches }] },
 	],
-});
+};
 
-const modes: Mode[] = [boostCarsMode, truckHeistMode];
+const modes: ReadonlyArray<ModeInfo> = [boostCarsMode, truckHeistMode];
 
 export default modes;

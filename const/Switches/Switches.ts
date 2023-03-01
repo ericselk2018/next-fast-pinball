@@ -1,37 +1,46 @@
-import Switch from '../../entities/Switch/Switch';
+export interface SwitchInfo {
+	readonly number: number;
+	readonly name: string;
+}
 
-export const leftFlipperEndOfStroke = new Switch({ number: 0, name: 'Left Flipper End of Stroke' });
-export const leftFlipperButtonSwitch = new Switch(new Switch({ number: 8, name: 'Left Flipper Button' }));
-export const rightFlipperEndOfStroke = new Switch({ number: 3, name: 'Right Flipper End of Stroke' });
-export const rightFlipperButtonSwitch = new Switch(new Switch({ number: 9, name: 'Right Flipper Button' }));
-export const coinSlotSwitch = new Switch(new Switch({ number: 11, name: 'Coin Slot' }));
-export const startButtonSwitch = new Switch({ number: 10, name: 'Start Button' });
-export const inlaneSwitch = new Switch({ number: 6, name: 'Inlane Rollover' });
-export const domSwitch = new Switch({ number: 7, name: 'Dom Target' });
-export const skylineSwitch = new Switch({ number: 16, name: 'Skyline Target' });
-export const domHomeSwitch = new Switch({ number: 17, name: 'Dom Home' });
-export const rogersTruckSwitch = new Switch({ number: 18, name: 'Rogers Truck' });
-export const underRogersTruckSwitch = new Switch({ number: 19, name: 'Under Rogers Truck' });
+export interface TargetInfo extends SwitchInfo {
+	readonly image: string;
+	readonly videos: ReadonlyArray<string>;
+}
 
-export const driverSwitches: Switch[] = [domSwitch];
-export const carSwitches: Switch[] = [skylineSwitch];
-export const hideSwitches: Switch[] = [domHomeSwitch];
-export const truckSwitches: Switch[] = [rogersTruckSwitch];
-export const stuntSwitches: Switch[] = [underRogersTruckSwitch];
+export const leftFlipperEndOfStrokeSwitch: SwitchInfo = { number: 0, name: 'Left Flipper End of Stroke' };
+export const leftFlipperButtonSwitch: SwitchInfo = { number: 8, name: 'Left Flipper Button' };
+export const rightFlipperEndOfStrokeSwitch: SwitchInfo = { number: 3, name: 'Right Flipper End of Stroke' };
+export const rightFlipperButtonSwitch: SwitchInfo = { number: 9, name: 'Right Flipper Button' };
+export const coinSlotSwitch: SwitchInfo = { number: 11, name: 'Coin Slot' };
+export const startButtonSwitch: SwitchInfo = { number: 10, name: 'Start Button' };
+export const inlaneSwitch: SwitchInfo = { number: 6, name: 'Inlane Rollover' };
+export const domSwitch: SwitchInfo = { number: 7, name: 'Dom Target' };
+export const skylineSwitch: SwitchInfo = { number: 16, name: 'Skyline Target' };
+export const domHomeSwitch: TargetInfo = { number: 17, name: 'Dom Home', image: 'dom.jpg', videos: ['dom1.mp4'] };
+export const rogersTruckSwitch: SwitchInfo = { number: 18, name: 'Rogers Truck' };
+export const underRogersTruckSwitch: SwitchInfo = { number: 19, name: 'Under Rogers Truck' };
 
-const switches: Switch[] = [
-	leftFlipperEndOfStroke,
+export const driverSwitches: ReadonlyArray<SwitchInfo> = [domSwitch];
+export const carSwitches: ReadonlyArray<SwitchInfo> = [skylineSwitch];
+export const hideSwitches: ReadonlyArray<TargetInfo> = [domHomeSwitch];
+export const truckSwitches: ReadonlyArray<SwitchInfo> = [rogersTruckSwitch];
+export const stuntSwitches: ReadonlyArray<SwitchInfo> = [underRogersTruckSwitch];
+export const kickerSwitches = hideSwitches;
+
+const switches: ReadonlyArray<SwitchInfo> = [
+	leftFlipperEndOfStrokeSwitch,
 	leftFlipperButtonSwitch,
-	rightFlipperEndOfStroke,
+	rightFlipperEndOfStrokeSwitch,
 	rightFlipperButtonSwitch,
 	coinSlotSwitch,
 	startButtonSwitch,
 	inlaneSwitch,
 	domSwitch,
-	new Switch({ number: 1, name: 'Left Sling' }),
-	new Switch({ number: 2, name: 'Left Rollover' }),
-	new Switch({ number: 4, name: 'Right Sling' }),
-	new Switch({ number: 5, name: 'Right Rollover' }),
+	{ number: 1, name: 'Left Sling' },
+	{ number: 2, name: 'Left Rollover' },
+	{ number: 4, name: 'Right Sling' },
+	{ number: 5, name: 'Right Rollover' },
 ];
 
 export default switches;

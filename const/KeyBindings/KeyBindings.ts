@@ -1,4 +1,9 @@
-import KeyBinding from '@/entities/KeyBinding/KeyBinding';
+export interface KeyBindingInfo {
+	readonly key: string;
+	readonly location?: number;
+	readonly switch: SwitchInfo;
+}
+
 import {
 	coinSlotSwitch,
 	domSwitch,
@@ -6,15 +11,16 @@ import {
 	leftFlipperButtonSwitch,
 	rightFlipperButtonSwitch,
 	startButtonSwitch,
+	SwitchInfo,
 } from '../Switches/Switches';
 
-const keyBindings: KeyBinding[] = [
-	new KeyBinding({ key: 'Shift', location: 1, switch: leftFlipperButtonSwitch }),
-	new KeyBinding({ key: 'Shift', location: 2, switch: rightFlipperButtonSwitch }),
-	new KeyBinding({ key: 'c', switch: coinSlotSwitch }),
-	new KeyBinding({ key: 's', switch: startButtonSwitch }),
-	new KeyBinding({ key: 'i', switch: inlaneSwitch }),
-	new KeyBinding({ key: 'd', switch: domSwitch }),
+const keyBindings: ReadonlyArray<KeyBindingInfo> = [
+	{ key: 'Shift', location: 1, switch: leftFlipperButtonSwitch },
+	{ key: 'Shift', location: 2, switch: rightFlipperButtonSwitch },
+	{ key: 'c', switch: coinSlotSwitch },
+	{ key: 's', switch: startButtonSwitch },
+	{ key: 'i', switch: inlaneSwitch },
+	{ key: 'd', switch: domSwitch },
 ];
 
 export default keyBindings;

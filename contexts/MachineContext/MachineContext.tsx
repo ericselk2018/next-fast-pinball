@@ -1,38 +1,40 @@
-import modes from '@/const/Modes/Modes';
 import { coinSlotSwitch, inlaneSwitch } from '@/const/Switches/Switches';
-import Game from '@/entities/Game/Game';
-import Mode from '@/entities/Mode/Mode';
-import { createContext, ReactNode, useCallback, useMemo, useState } from 'react';
-import { useSwitchHit } from '../HardwareContext/HardwareContext';
+import Machine from '@/entities/Machine';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import HardwareContext from '../HardwareContext/HardwareContext';
 
-interface MachineContext {
-	credits: number;
-	consumeCredits: (args: { creditsUsed: number }) => void;
-}
-
-const MachineContext = createContext<MachineContext>(null!);
+const MachineContext = createContext<Machine>(null!);
 
 export const MachineContextProvider = ({ children }: { children: ReactNode }) => {
+	const hardware = useContext(HardwareContext);
 	const [credits, setCredits] = useState(0);
+	const coinSlot = hardware.switches.find((aSwitch) => aSwitch.number === coinSlotSwitch.number);
 
-	useSwitchHit({
-		switch: coinSlotSwitch,
-		onHit: () => {
-			setCredits((credits) => credits + 1);
-		},
-	});
+	useEffect(() => {
+		if (coinSlot) {
+			return coinSlot.addHitHandler({
+				onHit: () => {
+					setCredits((credits) => credits + 1);
+				},
+			});
+		}
+	}, [coinSlot]);
 
 	const consumeCredits = useCallback((args: { creditsUsed: number }) => {
 		const { creditsUsed } = args;
 		setCredits((credits) => Math.max(0, credits - creditsUsed));
 	}, []);
 
-	const context: MachineContext = useMemo(
+	const context: Machine = useMemo(
 		() => ({
-			credits,
-			consumeCredits,
+			get credits() {
+				return credits;
+			},
+			set credits(value) {
+				setCredits(value);
+			},
 		}),
-		[credits, consumeCredits]
+		[credits]
 	);
 
 	return <MachineContext.Provider value={context}>{children}</MachineContext.Provider>;

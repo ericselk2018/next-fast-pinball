@@ -16,7 +16,7 @@ Each player has a count of total balls for the game -- increases if they achieve
 
 The number of balls, from total, that player has used. When used reaches total, no additional balls will be given, game over for player when balls drain.
 
-### Player Initials (Machine Context)
+### Player Initials (Game Context)
 
 List of player initials currently playing - can't change during game. Just used for achievement tracking.
 
@@ -44,17 +44,37 @@ When certain things happen like a goal being completed, or a combo shot hit, a v
 
 The current player, a 0 based index, a simple number.
 
-### Switches Opened/Closed (Hardware Context)
-
-Open/closed flags for each switch. This is also maintained by the hardware (when not in virtual mode), but we keep a local copy in sync with hardware to avoid having to query the hardware, and so we can trigger hooks when state changes.
-
 ### Switches Hit/Lit (Game Context)
 
-As switches are hit, game logic is applied to toggle a hit/lit state.
+As switches are activated (hit/pressed), game logic is applied to toggle a hit/lit state.
 
 ### Credits (Machine Context)
 
 Number of credits available (not spent).
+
+### Balls in Play (Game Context)
+
+Number of balls moving on playfield, just a count.
+
+### Saucer Hole Balls (Game Context)
+
+Switch number for each saucer hole switch that contains a ball.
+
+### Hardware Error (Hardware Context)
+
+An error, if unable to connect to FAST controller.
+
+### Browser Serial Port Permission Required (Hardware Context)
+
+The first time we connect to a new serial port from a new browser/device, we need to get permission. This is done with a one-time setup process. It needs to be redone if certain data is cleared/reset, but it should never expire if changes to the host computer are not done. Hopefully in the future browsers will have a feature flag to disable this security.
+
+### Boot Complete (Hardware Context)
+
+At startup we need to connect to FAST controller before certain modes can start.
+
+### Switch Open/Closed State (Hardware Context)
+
+For some switches we don't just track hits, we want to know the current state. This state is just an array of booleans, one for each switch, indexed by switch number, true = open.
 
 ## Folder Structure
 
@@ -130,6 +150,10 @@ Information about game modes.
 
 Show me the money!
 
+#### Rules
+
+Without rules, we have chaos.
+
 #### Switches
 
 Information about switches goes here.
@@ -157,6 +181,10 @@ Provides machine information, like number of credits (coins inserted), state of 
 ### entities
 
 Contains all of the first class citizens (aka things or nouns) that exist in our code.
+
+#### Coil
+
+Also known as a driver. Common pinball hardware -- electromagnet.
 
 #### Flipper
 

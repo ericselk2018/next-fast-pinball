@@ -7,11 +7,11 @@ import StartController from '../StartController/StartController.client';
 const ClientApp = () => {
 	return (
 		<AudioContextProvider>
-			<MachineContextProvider>
-				<HardwareContextProvider>
+			<HardwareContextProvider>
+				<MachineContextProvider>
 					<StartController />
-				</HardwareContextProvider>
-			</MachineContextProvider>
+				</MachineContextProvider>
+			</HardwareContextProvider>
 		</AudioContextProvider>
 	);
 };
