@@ -3,18 +3,14 @@ import {
 	driverSwitches,
 	hideSwitches,
 	stuntSwitches,
-	SwitchInfo,
+	TargetSwitchInfo,
 	truckSwitches,
 } from '../Switches/Switches';
 
-export interface ModeStepTaskInfo {
-	readonly switches: ReadonlyArray<SwitchInfo>;
-	readonly count?: number;
-}
-
 export interface ModeStepInfo {
 	readonly name: string;
-	readonly tasks: ReadonlyArray<ModeStepTaskInfo>;
+	readonly switches: ReadonlyArray<TargetSwitchInfo>;
+	readonly count?: number;
 }
 
 export interface ModeInfo {
@@ -27,9 +23,9 @@ export const boostCarsMode: ModeInfo = {
 	name: 'Boost Car',
 	video: 'boost-cars.mp4',
 	steps: [
-		{ name: 'Select Driver', tasks: [{ switches: driverSwitches }] },
-		{ name: 'Boost Car', tasks: [{ switches: carSwitches }] },
-		{ name: 'Hide Car', tasks: [{ switches: hideSwitches }] },
+		{ name: 'Select Driver', switches: driverSwitches },
+		{ name: 'Boost Car', switches: carSwitches },
+		{ name: 'Hide Car', switches: hideSwitches },
 	],
 };
 
@@ -37,9 +33,9 @@ export const truckHeistMode: ModeInfo = {
 	name: 'Truck Heist',
 	video: 'truck-heist.mp4',
 	steps: [
-		{ name: 'Get Team', tasks: [{ switches: driverSwitches, count: 2 }] },
-		{ name: 'Intercept Truck', tasks: [{ switches: truckSwitches }] },
-		{ name: 'Insane Stunt', tasks: [{ switches: stuntSwitches }] },
+		{ name: 'Get Team', switches: driverSwitches, count: 2 },
+		{ name: 'Intercept Truck', switches: truckSwitches },
+		{ name: 'Insane Stunt', switches: stuntSwitches },
 	],
 };
 

@@ -1,17 +1,19 @@
 import styled, { css } from 'styled-components';
+import Slide from '../Slide/Slide.client';
 
-export const Container = styled.div(
-	() => `
+export const StyledSlide = styled(Slide)`
 	display: flex;
 	flex-direction: column;
-`
-);
+`;
+
+export const Top = styled.div`
+	flex: 1;
+`;
 
 export const Name = styled.div`
-	font-size: 150px;
+	font-size: 100px;
 	text-align: center;
 	text-decoration: underline;
-	flex: 1;
 `;
 
 export const Bottom = styled.div`
@@ -25,10 +27,8 @@ export const Left = styled.div`
 	width: 100%;
 `;
 
-export const Steps = styled.ol`
-	font-size: 80px;
-	list-style: decimal;
-	list-style-position: inside;
+export const Steps = styled.div`
+	font-size: 60px;
 `;
 
 export const completeStep = css`
@@ -57,7 +57,7 @@ export const completeStep = css`
 	}
 `;
 
-export const Step = styled.li(
+export const Step = styled.div(
 	({ complete, active }: { complete: boolean; active: boolean }) => `
 	position: relative;
 	width: fit-content;
@@ -67,9 +67,14 @@ export const Step = styled.li(
 `
 );
 
+export const StepName = styled.div``;
+
+export const StepImages = styled.div``;
+
+export const StepImage = styled.div(({ complete }: { complete: boolean }) => ``);
+
 export const VideoContainer = styled.div`
 	position: relative;
-	width: 100%;
 
 	::after {
 		position: absolute;

@@ -1,15 +1,16 @@
 import flippers, { FlipperInfo } from '@/const/Flippers/Flippers';
 import keyBindings from '@/const/KeyBindings/KeyBindings';
 import lights, { LightInfo } from '@/const/Lights/Lights';
+import { useVirtualHardware } from '@/const/Setup/Setup';
 import Flipper from '@/entities/Flipper';
 import Hardware from '@/entities/Hardware';
 import Kicker from '@/entities/Kicker';
 import Light from '@/entities/Light';
 import Switch from '@/entities/Switch';
-import Target from '@/entities/Target';
+import TargetSwitch from '@/entities/TargetSwitch';
 import { bitTest } from '@/lib/math/math';
 import { createContext, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import switches, { kickerSwitches, SwitchInfo, TargetInfo } from '../../const/Switches/Switches';
+import switches, { kickerSwitches, SwitchInfo, TargetSwitchInfo } from '../../const/Switches/Switches';
 
 // These will need to be adjusted if FAST changes these.
 const usbVendorId = 11914;
@@ -27,8 +28,8 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const [lastError, setLastError] = useState<Error>();
 	const received = useRef('');
 	const [permissionRequired, setPermissionRequired] = useState(false);
-	const [usingVirtualHardware, setUsingVirtualHardware] = useState(false);
-	const [bootDone, setBootDone] = useState(false);
+	const [usingVirtualHardware, setUsingVirtualHardware] = useState(useVirtualHardware);
+	const [bootDone, setBootDone] = useState(usingVirtualHardware);
 	const [switchesOpen, setSwitchesOpen] = useState(
 		Array<boolean>(Math.max(...switches.map((aSwitch) => aSwitch.number))).fill(false)
 	);
@@ -209,8 +210,8 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		[switchInfoToSwitch]
 	);
 
-	const targetInfoToTarget = useCallback(
-		(targetInfo: TargetInfo): Target => {
+	const targetSwitchInfoToTargetSwitch = useCallback(
+		(targetInfo: TargetSwitchInfo): TargetSwitch => {
 			const { image, videos } = targetInfo;
 			return { ...switchInfoToSwitch(targetInfo), image, videos };
 		},
@@ -218,10 +219,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	);
 
 	const targetInfoToKicker = useCallback(
-		(targetInfo: TargetInfo): Kicker => {
-			return { ...targetInfoToTarget(targetInfo), hasBall: false };
+		(targetInfo: TargetSwitchInfo): Kicker => {
+			return { ...targetSwitchInfoToTargetSwitch(targetInfo), hasBall: false };
 		},
-		[targetInfoToTarget]
+		[targetSwitchInfoToTargetSwitch]
 	);
 
 	const lightInfoToLight = useCallback((lightInfo: LightInfo): Light => {
@@ -239,8 +240,9 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			lights: lights.map(lightInfoToLight),
 			switches: switches.map(switchInfoToSwitch),
 			switchInfoToSwitch,
+			targetSwitchInfoToTargetSwitch,
 		}),
-		[flipperInfoToFlipper, lightInfoToLight, switchInfoToSwitch, targetInfoToKicker]
+		[flipperInfoToFlipper, lightInfoToLight, switchInfoToSwitch, targetInfoToKicker, targetSwitchInfoToTargetSwitch]
 	);
 
 	if (lastError) {

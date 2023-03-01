@@ -92,19 +92,11 @@ Entry point. Provides contexts and renders StartController.
 
 #### GameController
 
-Controls a game. Renders only while a game is running. Decides which mode is active.
+Controls a game. Renders only while a game is running. Decides which mode is active. Renders game status and slides.
 
 #### ModeSelect
 
 Rendered during mode selection (no active balls). Allows player to select the next mode to start.
-
-#### ModeSlide
-
-Obsolete - will move to Slides\GameSlide
-
-#### Play
-
-Obsolete - will move to Slides\GameSlide
 
 #### Slides
 

@@ -20,11 +20,6 @@ export const MachineContextProvider = ({ children }: { children: ReactNode }) =>
 		}
 	}, [coinSlot]);
 
-	const consumeCredits = useCallback((args: { creditsUsed: number }) => {
-		const { creditsUsed } = args;
-		setCredits((credits) => Math.max(0, credits - creditsUsed));
-	}, []);
-
 	const context: Machine = useMemo(
 		() => ({
 			get credits() {

@@ -1,10 +1,9 @@
-import modes, { ModeInfo, ModeStepInfo, ModeStepTaskInfo } from '@/const/Modes/Modes';
+import modes, { ModeInfo, ModeStepInfo } from '@/const/Modes/Modes';
 import { startingBallsPerPlayer } from '@/const/Rules/Rules';
 import { inlaneSwitch } from '@/const/Switches/Switches';
 import Game from '@/entities/Game';
 import Mode from '@/entities/Mode';
 import ModeStep from '@/entities/ModeStep';
-import ModeStepTask from '@/entities/ModeStepTask';
 import Player from '@/entities/Player';
 import Shot from '@/entities/Shot';
 import { replaceItemAtIndex } from '@/lib/array/array';
@@ -21,7 +20,7 @@ const GameContext = createContext<Game>(null!);
 
 export const GameContextProvider = ({ children, playerCount }: { children: ReactNode; playerCount: number }) => {
 	const hardware = useContext(HardwareContext);
-	const { switchInfoToSwitch } = hardware;
+	const { switchInfoToSwitch, targetSwitchInfoToTargetSwitch } = hardware;
 	const [scores, setScores] = useState(Array(playerCount).fill(0));
 	const [totalBalls, setTotalBalls] = useState(Array(playerCount).fill(startingBallsPerPlayer));
 	const [usedBalls, setUsedBalls] = useState(Array(playerCount).fill(0));
@@ -47,12 +46,13 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 		}
 	}, [inlane]);
 
-	const modeStepTaskInfoToModeStepTask = useCallback(
-		(modeStepTaskInfo: ModeStepTaskInfo, modeStepInfo: ModeStepInfo, modeInfo: ModeInfo): ModeStepTask => {
-			const { switches, count } = modeStepTaskInfo;
+	const modeStepInfoToModeStep = useCallback(
+		(modeStepInfo: ModeStepInfo, modeInfo: ModeInfo): ModeStep => {
+			const { name, switches, count } = modeStepInfo;
 			return {
+				name,
 				count: count || 1,
-				switches: switches.map(switchInfoToSwitch),
+				switches: switches.map(targetSwitchInfoToTargetSwitch),
 				completedSwitches: switches
 					.filter((aSwitch) =>
 						tasksCompleted.some(
@@ -71,17 +71,6 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 			};
 		},
 		[switchInfoToSwitch, tasksCompleted]
-	);
-
-	const modeStepInfoToModeStep = useCallback(
-		(modeStepInfo: ModeStepInfo, modeInfo: ModeInfo): ModeStep => {
-			const { name, tasks } = modeStepInfo;
-			return {
-				name,
-				tasks: tasks.map((task) => modeStepTaskInfoToModeStepTask(task, modeStepInfo, modeInfo)),
-			};
-		},
-		[modeStepTaskInfoToModeStepTask]
 	);
 
 	const modeInfoToMode = useCallback(

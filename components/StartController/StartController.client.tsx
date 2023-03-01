@@ -7,6 +7,7 @@ import { maxPlayers } from '@/const/Constraints/Constraints';
 import AttractSlide from '../Slides/AttractSlide/AttractSlide.client';
 import { creditsPerPlayer } from '@/const/Money/Money';
 import HardwareContext from '@/contexts/HardwareContext/HardwareContext';
+import { autoStartGamePlayers } from '@/const/Setup/Setup';
 
 // This controller handles state and logic for starting a game, including:
 //  Displays slide to attract players.
@@ -17,7 +18,7 @@ const StartController = () => {
 	const machine = useContext(MachineContext);
 	const { credits } = machine;
 	const [playerCount, setPlayerCount] = useState(1);
-	const [gameStartedPlayerCount, setGameStartedPlayerCount] = useState(0);
+	const [gameStartedPlayerCount, setGameStartedPlayerCount] = useState(autoStartGamePlayers);
 	const creditsRequired = creditsPerPlayer * playerCount;
 	const creditsNeeded = creditsRequired - credits;
 	const startButton = switches.find((aSwitch) => aSwitch.number === startButtonSwitch.number);
