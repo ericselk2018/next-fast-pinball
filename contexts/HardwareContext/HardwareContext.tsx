@@ -32,20 +32,24 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const [switchesOpen, setSwitchesOpen] = useState(
 		Array<boolean>(Math.max(...switches.map((aSwitch) => aSwitch.number))).fill(false)
 	);
-	const switchHitEventHandlers = useRef<SwitchHitEventHandler[]>([]).current;
+	const switchHitEventHandlers = useRef<SwitchHitEventHandler[]>([]);
 
-	const addSwitchHitEventHandler = useCallback(
-		(handler: SwitchHitEventHandler) => {
-			switchHitEventHandlers.push(handler);
-			return () => {
-				const i = switchHitEventHandlers.indexOf(handler);
-				if (i !== -1) {
-					switchHitEventHandlers.splice(i, 1);
-				}
-			};
-		},
-		[switchHitEventHandlers]
-	);
+	const addSwitchHitEventHandler = useCallback((handler: SwitchHitEventHandler) => {
+		switchHitEventHandlers.current.push(handler);
+		return () => {
+			const i = switchHitEventHandlers.current.indexOf(handler);
+			if (i !== -1) {
+				switchHitEventHandlers.current.splice(i, 1);
+			}
+		};
+	}, []);
+
+	const notifySwitchHitEventHandlers = useCallback((args: { switchNumber: number }) => {
+		const { switchNumber } = args;
+		switchHitEventHandlers.current
+			.filter((handler) => handler.switchNumber === switchNumber)
+			.forEach((handler) => handler.onHit());
+	}, []);
 
 	const open = useCallback(
 		async (port: SerialPort) => {
@@ -79,6 +83,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 												switchNumber === switchChangedNumber ? isOpenNow : wasOpen
 											)
 										);
+										// TODO: add normally closed logic here
+										if (!isOpenNow) {
+											notifySwitchHitEventHandlers({ switchNumber: switchChangedNumber });
+										}
 									}
 								}
 							});
@@ -96,7 +104,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				setLastError(reason);
 			}
 		},
-		[switchesOpen]
+		[notifySwitchHitEventHandlers, switchesOpen]
 	);
 
 	useEffect(() => {
@@ -142,12 +150,15 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					setSwitchesOpen((switchesOpen) =>
 						switchesOpen.map((open, number) => (number === keyBinding.switch.number ? false : open))
 					);
+
+					// TODO: add normally closed logic here
+					notifySwitchHitEventHandlers({ switchNumber: keyBinding.switch.number });
 				}
 			};
 			document.addEventListener('keydown', handleKeyDown);
 			return () => document.removeEventListener('keydown', handleKeyDown);
 		}
-	}, [usingVirtualHardware]);
+	}, [notifySwitchHitEventHandlers, usingVirtualHardware]);
 
 	useEffect(() => {
 		if (usingVirtualHardware) {
@@ -162,6 +173,8 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					setSwitchesOpen((switchesOpen) =>
 						switchesOpen.map((open, number) => (number === keyBinding.switch.number ? true : open))
 					);
+					// TODO: add normally closed logic here
+					// notifySwitchHitEventHandlers({ switchNumber: keyBinding.switch.number });
 				}
 			};
 			document.addEventListener('keyup', handleKeyUp);
@@ -174,16 +187,15 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			const { name, number } = switchInfo;
 			return {
 				addHitHandler: (args) => {
-					return () => {
-						//
-					};
+					const { onHit } = args;
+					return addSwitchHitEventHandler({ switchNumber: number, onHit });
 				},
 				name,
 				number,
 				open: switchesOpen[number],
 			};
 		},
-		[switchesOpen]
+		[addSwitchHitEventHandler, switchesOpen]
 	);
 
 	const flipperInfoToFlipper = useCallback(

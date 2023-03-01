@@ -1,43 +1,53 @@
 import modes from '@/const/Modes/Modes';
 import { leftFlipperButtonSwitch, rightFlipperButtonSwitch } from '@/const/Switches/Switches';
 import GameContext from '@/contexts/GameContext/GameContext.client';
-import { useSwitchHit } from '@/contexts/HardwareContext/HardwareContext';
-import { useContext, useState } from 'react';
+import HardwareContext from '@/contexts/HardwareContext/HardwareContext';
+import { useContext, useEffect, useState } from 'react';
 import ModeSlide from '../ModeSlide/ModeSlide.client';
 import * as S from './ModeSelect.styles';
 
 const ModeSelect = () => {
-	const { game, activeModeIndex, setActiveModeIndex } = useContext(GameContext);
-	const { currentPlayer } = game;
+	const { switches } = useContext(HardwareContext);
+	const game = useContext(GameContext);
+	const { currentMode, modes } = game;
+	const currentModeIndex = modes.findIndex((mode) => mode.name === currentMode.name);
+	const rightFlipperButton = switches.find((aSwitch) => aSwitch.number === rightFlipperButtonSwitch.number);
+	const leftFlipperButton = switches.find((aSwitch) => aSwitch.number === leftFlipperButtonSwitch.number);
 
 	// go to next mode on right flipper button hit
-	useSwitchHit({
-		switch: rightFlipperButtonSwitch,
-		onHit: () => {
-			if (activeModeIndex + 1 < modes.length) {
-				setActiveModeIndex(activeModeIndex + 1);
-			} else {
-				setActiveModeIndex(0);
-			}
-		},
-	});
+	useEffect(() => {
+		if (rightFlipperButton) {
+			return rightFlipperButton.addHitHandler({
+				onHit: () => {
+					if (currentModeIndex + 1 < modes.length) {
+						game.currentMode = modes[currentModeIndex + 1];
+					} else {
+						game.currentMode = modes[0];
+					}
+				},
+			});
+		}
+	}, [currentModeIndex, game, modes, rightFlipperButton]);
 
 	// go to previous mode on left flipper button hit
-	useSwitchHit({
-		switch: leftFlipperButtonSwitch,
-		onHit: () => {
-			if (activeModeIndex > 0) {
-				setActiveModeIndex(activeModeIndex - 1);
-			} else {
-				setActiveModeIndex(modes.length - 1);
-			}
-		},
-	});
+	useEffect(() => {
+		if (leftFlipperButton) {
+			return leftFlipperButton.addHitHandler({
+				onHit: () => {
+					if (currentModeIndex > 0) {
+						game.currentMode = modes[currentModeIndex - 1];
+					} else {
+						game.currentMode = modes[modes.length - 1];
+					}
+				},
+			});
+		}
+	}, [currentModeIndex, game, leftFlipperButton, modes]);
 
 	return (
 		<S.Container>
 			{modes.map((mode, index) => (
-				<ModeSlide key={index} active={activeModeIndex === index} mode={mode} />
+				<ModeSlide key={index} active={currentModeIndex === index} mode={mode} />
 			))}
 		</S.Container>
 	);

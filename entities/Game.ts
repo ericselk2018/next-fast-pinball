@@ -10,4 +10,5 @@ export default interface Game {
 	currentMode: Mode;
 	readonly shots: ReadonlyArray<Shot>;
 	videoPlaying: string;
+	readonly modes: ReadonlyArray<Mode>;
 }

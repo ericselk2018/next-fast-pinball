@@ -1,6 +1,5 @@
-import { creditsPerPlayer, maxPlayers } from '@/const/Constraints/Constraints';
+import { maxPlayers } from '@/const/Constraints/Constraints';
 import { startButtonSwitch, leftFlipperButtonSwitch, rightFlipperButtonSwitch } from '@/const/Switches/Switches';
-import { useSwitchHit } from '@/contexts/HardwareContext/HardwareContext';
 import MachineContext from '@/contexts/MachineContext/MachineContext';
 import { useContext, useState } from 'react';
 import * as S from './AttractSlide.styles';

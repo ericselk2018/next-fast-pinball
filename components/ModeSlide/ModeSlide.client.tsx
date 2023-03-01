@@ -1,6 +1,6 @@
 'use client';
 import GameContext from '@/contexts/GameContext/GameContext.client';
-import Mode from '@/entities/Mode/Mode';
+import Mode from '@/entities/Mode';
 import { useContext, useEffect, useRef } from 'react';
 import Slide from '../Slides/Slide/Slide.client';
 import * as S from './ModeSlide.styles';
@@ -11,7 +11,6 @@ interface Props {
 }
 
 const ModeSlide = (props: Props) => {
-	const { game } = useContext(GameContext);
 	const { active, mode } = props;
 	const { name, steps, video } = mode;
 	const videoElement = useRef<HTMLVideoElement>(null);

@@ -4,8 +4,8 @@ import ModeSelect from '../ModeSelect/ModeSelect.client';
 import Play from '../Play/Play';
 
 const GameController = () => {
-	const { activeMode } = useContext(GameContext);
-	return activeMode ? <Play mode={activeMode} /> : <ModeSelect />;
+	const { currentMode, ballsInPlay } = useContext(GameContext);
+	return ballsInPlay ? <Play mode={currentMode} /> : <ModeSelect />;
 };
 
 export default GameController;

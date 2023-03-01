@@ -7,7 +7,8 @@ import ModeStep from '@/entities/ModeStep';
 import ModeStepTask from '@/entities/ModeStepTask';
 import Player from '@/entities/Player';
 import Shot from '@/entities/Shot';
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { replaceItemAtIndex } from '@/lib/array/array';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import HardwareContext from '../HardwareContext/HardwareContext';
 
 interface CompletedTask {
@@ -46,43 +47,82 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 		}
 	}, [inlane]);
 
-	const modeStepTaskInfoToModeStepTask = (modeStepTaskInfo: ModeStepTaskInfo): ModeStepTask => {
-		const { switches, count } = modeStepTaskInfo;
-		return {
-			count: count || 1,
-			switches: switches.map(switchInfoToSwitch),
-		};
-	};
+	const modeStepTaskInfoToModeStepTask = useCallback(
+		(modeStepTaskInfo: ModeStepTaskInfo, modeStepInfo: ModeStepInfo, modeInfo: ModeInfo): ModeStepTask => {
+			const { switches, count } = modeStepTaskInfo;
+			return {
+				count: count || 1,
+				switches: switches.map(switchInfoToSwitch),
+				completedSwitches: switches
+					.filter((aSwitch) =>
+						tasksCompleted.some(
+							(task) =>
+								task.mode === modeInfo.name &&
+								task.step === modeStepInfo.name &&
+								task.switch === aSwitch.number
+						)
+					)
+					.map(switchInfoToSwitch),
+				completeSwitch: (args) =>
+					setTasksCompleted((tasksCompleted) => [
+						...tasksCompleted,
+						{ mode: modeInfo.name, step: modeStepInfo.name, switch: args.switch.number },
+					]),
+			};
+		},
+		[switchInfoToSwitch, tasksCompleted]
+	);
 
-	const modeStepInfoToModeStep = (modeStepInfo: ModeStepInfo): ModeStep => {
-		const { name, tasks } = modeStepInfo;
-		return {
-			name,
-			tasks: tasks.map(modeStepTaskInfoToModeStepTask),
-		};
-	};
+	const modeStepInfoToModeStep = useCallback(
+		(modeStepInfo: ModeStepInfo, modeInfo: ModeInfo): ModeStep => {
+			const { name, tasks } = modeStepInfo;
+			return {
+				name,
+				tasks: tasks.map((task) => modeStepTaskInfoToModeStepTask(task, modeStepInfo, modeInfo)),
+			};
+		},
+		[modeStepTaskInfoToModeStepTask]
+	);
 
-	const modeInfoToMode = (modeInfo: ModeInfo): Mode => {
-		const { name, steps, video } = modeInfo;
-		return {
-			name,
-			video,
-			steps: steps.map(modeStepInfoToModeStep),
-		};
-	};
+	const modeInfoToMode = useCallback(
+		(modeInfo: ModeInfo): Mode => {
+			const { name, steps, video } = modeInfo;
+			return {
+				name,
+				video,
+				steps: steps.map((step) => modeStepInfoToModeStep(step, modeInfo)),
+			};
+		},
+		[modeStepInfoToModeStep]
+	);
 
 	const currentMode = modeInfoToMode(modes[currentModeIndex]);
 
 	const players: Player[] = initials.map(
 		(initials, index): Player => ({
 			initials,
-			totalBalls: totalBalls[index],
-			usedBalls: usedBalls[index],
+			get totalBalls() {
+				return totalBalls[index];
+			},
+			set totalBalls(value) {
+				setTotalBalls(replaceItemAtIndex({ array: totalBalls, index, item: value }));
+			},
+			get usedBalls() {
+				return usedBalls[index];
+			},
+			set usedBalls(value) {
+				setUsedBalls(replaceItemAtIndex({ array: usedBalls, index, item: value }));
+			},
 			get ballsRemaining() {
 				return this.totalBalls - this.usedBalls;
 			},
 			hasCompletedMode: ({ mode }: { mode: Mode }) => modesCompleted[index].includes(mode.name),
-			score: scores[index],
+			get score() {
+				return scores[index];
+			},
+			set score(value) {
+				setScores(replaceItemAtIndex({ array: scores, index, item: value }));
+			},
 		})
 	);
 
@@ -91,10 +131,26 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 
 	const context: Game = useMemo(
 		() => ({
-			ballsInPlay,
-			currentMode,
+			modes: modes.map(modeInfoToMode),
+			get ballsInPlay() {
+				return ballsInPlay;
+			},
+			set ballsInPlay(value) {
+				setBallsInPlay(value);
+			},
+			get currentMode() {
+				return currentMode;
+			},
+			set currentMode(mode) {
+				setCurrentModeIndex(this.modes.indexOf(mode));
+			},
 			players,
-			currentPlayer,
+			get currentPlayer() {
+				return currentPlayer;
+			},
+			set currentPlayer(player) {
+				setCurrentPlayerIndex(players.indexOf(player));
+			},
 			nextPlayer,
 			shots,
 			get videoPlaying() {
@@ -104,7 +160,7 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 				setVideoPlaying(video);
 			},
 		}),
-		[ballsInPlay, currentMode, currentPlayer, nextPlayer, players, shots, videoPlaying]
+		[ballsInPlay, currentMode, currentPlayer, modeInfoToMode, nextPlayer, players, shots, videoPlaying]
 	);
 
 	return <GameContext.Provider value={context}>{children}</GameContext.Provider>;
