@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef } from 'react';
 import * as S from './GameStatus.styles';
 
 const GameStatus = () => {
-	const { players } = useContext(GameContext);
+	const { players, currentPlayer, shots } = useContext(GameContext);
 
 	return (
 		<S.Container>
@@ -11,16 +11,30 @@ const GameStatus = () => {
 				{players.map((player, index) => {
 					const { score, usedBalls, totalBalls } = player;
 					return (
-						<S.Player key={index}>
-							<S.Score>{score}</S.Score>
+						<S.Player key={index} active={player.number === currentPlayer.number}>
+							<S.Score>{score.toLocaleString()}</S.Score>
 							<S.Balls>
-								{usedBalls}/{totalBalls}
+								<img src="ball.png" />
+								<div>
+									{usedBalls}/{totalBalls}
+								</div>
 							</S.Balls>
 						</S.Player>
 					);
 				})}
 			</S.Players>
-			<S.Points>+100,000 Combo Shot Bonus</S.Points>
+			<S.Shots>
+				{shots.map((shot, index) => {
+					const { name, points } = shot;
+					return (
+						index + 11 > shots.length && (
+							<S.Shot key={index} styleNumber={index % 3}>
+								+{points.toLocaleString()} {name}
+							</S.Shot>
+						)
+					);
+				})}
+			</S.Shots>
 		</S.Container>
 	);
 };

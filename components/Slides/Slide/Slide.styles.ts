@@ -5,7 +5,6 @@ export const Container = styled.div(
 	transform: translateX(${active ? '0' : '-100%'});
 	transition: transform 1s;
 	overflow: hidden;
-	font-family: 'font1';
 	position: absolute;
 	left: 0;
 	right: 0;

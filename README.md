@@ -94,9 +94,9 @@ Entry point. Provides contexts and renders StartController.
 
 Controls a game. Renders only while a game is running. Decides which mode is active. Renders game status and slides.
 
-#### ModeSelect
+#### GameStatus
 
-Rendered during mode selection (no active balls). Allows player to select the next mode to start.
+Renders game status during game. Player scores, ball count, shot information, and tells players whos turn it is.
 
 #### Slides
 
@@ -122,6 +122,10 @@ Holds logic for starting and ending games. Decides if we are in attract mode or 
 
 Holds all of the constants - things that do not change, unless a developer changes them.
 
+#### AudioFiles
+
+Information about audio files.
+
 #### Constraints
 
 Limits we set to avoid the game being overly complex.
@@ -134,6 +138,10 @@ Information about flippers.
 
 Keyboard mappings for testing with virtual hardware.
 
+#### Lights
+
+LED/Lights/Bulbs/GI -- all goes here.
+
 #### Modes
 
 Information about game modes.
@@ -145,6 +153,10 @@ Show me the money!
 #### Rules
 
 Without rules, we have chaos.
+
+#### Setup
+
+Mostly options to toggle while doing development and testing on virtual hardware.
 
 #### Switches
 
@@ -186,9 +198,21 @@ Flip out!
 
 The one and only game object - get from GameContext while a game is active.
 
-#### KeyBinding
+#### Hardware
 
-A keyboard binding used for virtual hardware testing.
+Holds information about hardware, mostly from the FAST controller. Get from HardwareContext.
+
+#### Kicker
+
+I've heard them called a few names, including "Saucer Hole Kicker". In our game they are homes/garages/safe-houses. They hold the ball for a period of time, then kick it out. VPX calls them kickers, so I will too.
+
+#### Light
+
+A light, in the form of LED, GI, or anything else.
+
+#### Machine
+
+Holds information available about the machine state, available from MachineContext, such as the number of credits. If it isn't hardware related, and persists across multiple games, it probably goes here.
 
 #### Mode
 
@@ -198,17 +222,21 @@ A game mode. More like a mission, with tasks you need to complete.
 
 One step in a mode. Modes require multiple steps to complete.
 
-#### ModeTask
-
-A task in a ModeStep (rename to ModeStepTask?). Steps have 1 or more tasks to complete the step.
-
 #### Player
 
 You, and your friends.
 
+#### Shot
+
+A special shot that is good enough to have a name. Shown on the display when achieved.
+
 #### Switch
 
 A thing that can be opened or closed, 0/1, true/false, happy/sad.
+
+#### TargetSwitch
+
+A specific switch type that is a goal for a mode step. Includes an image and videos to display.
 
 ### lib
 

@@ -9,6 +9,7 @@ export default interface Game {
 	ballsInPlay: number;
 	currentMode: Mode;
 	readonly shots: ReadonlyArray<Shot>;
+	addShot: (shot: Shot) => void;
 	videoPlaying: string;
 	readonly modes: ReadonlyArray<Mode>;
 }

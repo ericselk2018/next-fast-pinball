@@ -1,5 +1,5 @@
 import modes, { ModeInfo, ModeStepInfo } from '@/const/Modes/Modes';
-import { startingBallsPerPlayer } from '@/const/Rules/Rules';
+import { startingBallsPerPlayer, startingScore } from '@/const/Rules/Rules';
 import { inlaneSwitch } from '@/const/Switches/Switches';
 import Game from '@/entities/Game';
 import Mode from '@/entities/Mode';
@@ -21,7 +21,7 @@ const GameContext = createContext<Game>(null!);
 export const GameContextProvider = ({ children, playerCount }: { children: ReactNode; playerCount: number }) => {
 	const hardware = useContext(HardwareContext);
 	const { switchInfoToSwitch, targetSwitchInfoToTargetSwitch } = hardware;
-	const [scores, setScores] = useState(Array(playerCount).fill(0));
+	const [scores, setScores] = useState(Array(playerCount).fill(startingScore));
 	const [totalBalls, setTotalBalls] = useState(Array(playerCount).fill(startingBallsPerPlayer));
 	const [usedBalls, setUsedBalls] = useState(Array(playerCount).fill(0));
 	const [initials, setInitials] = useState(Array(playerCount).fill(''));
@@ -89,6 +89,7 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 
 	const players: Player[] = initials.map(
 		(initials, index): Player => ({
+			number: index + 1,
 			initials,
 			get totalBalls() {
 				return totalBalls[index];
@@ -118,6 +119,10 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 	const currentPlayer = players[currentPlayerIndex];
 	const nextPlayer = players[currentPlayerIndex + 1 === players.length ? 0 : currentPlayerIndex + 1];
 
+	const addShot = useCallback((shot: Shot) => {
+		setShots((shots) => [...shots, shot]);
+	}, []);
+
 	const context: Game = useMemo(
 		() => ({
 			modes: modes.map(modeInfoToMode),
@@ -142,6 +147,7 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 			},
 			nextPlayer,
 			shots,
+			addShot,
 			get videoPlaying() {
 				return videoPlaying;
 			},
@@ -149,7 +155,7 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 				setVideoPlaying(video);
 			},
 		}),
-		[ballsInPlay, currentMode, currentPlayer, modeInfoToMode, nextPlayer, players, shots, videoPlaying]
+		[addShot, ballsInPlay, currentMode, currentPlayer, modeInfoToMode, nextPlayer, players, shots, videoPlaying]
 	);
 
 	return <GameContext.Provider value={context}>{children}</GameContext.Provider>;

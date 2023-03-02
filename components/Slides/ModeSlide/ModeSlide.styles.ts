@@ -8,6 +8,9 @@ export const StyledSlide = styled(Slide)`
 
 export const Top = styled.div`
 	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 `;
 
 export const Name = styled.div`
@@ -28,50 +31,45 @@ export const Left = styled.div`
 `;
 
 export const Steps = styled.div`
-	font-size: 60px;
+	flex: 1;
+	font-size: 70px;
+	line-height: 0.8;
+	padding: 0 40px;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
 `;
 
-export const completeStep = css`
-	@keyframes strike {
-		0% {
-			width: 0;
-		}
-		100% {
-			width: 100%;
-		}
-	}
-
-	::after {
-		content: '';
-		position: absolute;
-		top: 50%;
-		left: 0;
-		width: 100%;
-		height: 0.1em;
-		background: red;
-		animation-name: strike;
-		animation-duration: 1s;
-		animation-timing-function: linear;
-		animation-iteration-count: 1;
-		animation-fill-mode: forwards;
-	}
+export const StepName = styled.div`
+	text-align: center;
+	width: 210px;
+	overflow: hidden;
 `;
 
 export const Step = styled.div(
 	({ complete, active }: { complete: boolean; active: boolean }) => `
-	position: relative;
-	width: fit-content;
 	opacity: ${active ? '1' : '0.5'};
-
-	${complete ? completeStep : ``}
+	display: flex;
+	align-items: center;
+	gap: 40px;
 `
 );
 
-export const StepName = styled.div``;
+export const StepImages = styled.div`
+	display: flex;
+	gap: 10px;
+`;
 
-export const StepImages = styled.div``;
+export const StepImage = styled.div(
+	({ complete }: { complete: boolean }) => `
 
-export const StepImage = styled.div(({ complete }: { complete: boolean }) => ``);
+	img {
+		display: block;
+		width: 150px;
+		height: 150px;	
+	}
+`
+);
 
 export const VideoContainer = styled.div`
 	position: relative;

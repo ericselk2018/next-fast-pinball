@@ -8,13 +8,35 @@ import * as S from './GameController.styles';
 
 const GameController = () => {
 	const game = useContext(GameContext);
-	const { currentMode, ballsInPlay, modes } = game;
+	const { currentMode, ballsInPlay, modes, addShot } = game;
 	const { switches } = useContext(HardwareContext);
 	const currentModeIndex = modes.findIndex((mode) => mode.name === currentMode.name);
 	const rightFlipperButton = switches.find((aSwitch) => aSwitch.number === rightFlipperButtonSwitch.number);
 	const leftFlipperButton = switches.find((aSwitch) => aSwitch.number === leftFlipperButtonSwitch.number);
 
-	// go to next mode on right flipper button hit
+	// TEMP - for UI testing, add shot when right flipper hit with balls in play
+	useEffect(() => {
+		if (rightFlipperButton && ballsInPlay) {
+			return rightFlipperButton.addHitHandler({
+				onHit: () => {
+					addShot({ name: 'Super Combo Shot', points: 100000 });
+				},
+			});
+		}
+	}, [addShot, ballsInPlay, rightFlipperButton]);
+
+	// TEMP - for UI testing, add shot when left flipper hit with balls in play
+	useEffect(() => {
+		if (leftFlipperButton && ballsInPlay) {
+			return leftFlipperButton.addHitHandler({
+				onHit: () => {
+					addShot({ name: 'Insane Stunt', points: 10000 });
+				},
+			});
+		}
+	}, [addShot, ballsInPlay, leftFlipperButton]);
+
+	// go to next mode on right flipper button hit without balls in play
 	useEffect(() => {
 		if (rightFlipperButton && !ballsInPlay) {
 			return rightFlipperButton.addHitHandler({
@@ -29,7 +51,7 @@ const GameController = () => {
 		}
 	}, [ballsInPlay, currentModeIndex, game, modes, rightFlipperButton]);
 
-	// go to previous mode on left flipper button hit
+	// go to previous mode on left flipper button hit without balls in play
 	useEffect(() => {
 		if (leftFlipperButton && !ballsInPlay) {
 			return leftFlipperButton.addHitHandler({
