@@ -1,7 +1,8 @@
 import GameContext from '@/contexts/GameContext/GameContext.client';
-import { useContext, useEffect, useRef } from 'react';
+import { useContext } from 'react';
 import * as S from './GameStatus.styles';
 
+// Displays game status: Points, active player, shots hit, ball info.
 const GameStatus = () => {
 	const { players, currentPlayer, shots } = useContext(GameContext);
 

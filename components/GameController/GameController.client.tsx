@@ -6,6 +6,8 @@ import GameStatus from '../GameStatus/GameStatus';
 import ModeSlide from '../Slides/ModeSlide/ModeSlide.client';
 import * as S from './GameController.styles';
 
+// StartController renders this after game is started.
+// We now have access to GameContext, and any components we render also can access it.
 const GameController = () => {
 	const game = useContext(GameContext);
 	const { currentMode, ballsInPlay, modes, addShot } = game;

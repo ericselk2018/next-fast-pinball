@@ -1,12 +1,14 @@
 import { coinSlotSwitch, inlaneSwitch } from '@/const/Switches/Switches';
 import Machine from '@/entities/Machine';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import AudioContext from '../AudioContext/AudioContext.client';
 import HardwareContext from '../HardwareContext/HardwareContext';
 
 const MachineContext = createContext<Machine>(null!);
 
 export const MachineContextProvider = ({ children }: { children: ReactNode }) => {
 	const hardware = useContext(HardwareContext);
+	const audio = useContext(AudioContext);
 	const [credits, setCredits] = useState(0);
 	const coinSlot = hardware.switches.find((aSwitch) => aSwitch.number === coinSlotSwitch.number);
 
@@ -15,10 +17,11 @@ export const MachineContextProvider = ({ children }: { children: ReactNode }) =>
 			return coinSlot.addHitHandler({
 				onHit: () => {
 					setCredits((credits) => credits + 1);
+					audio.play({ name: 'rev' });
 				},
 			});
 		}
-	}, [coinSlot]);
+	}, [coinSlot, audio]);
 
 	const context: Machine = useMemo(
 		() => ({

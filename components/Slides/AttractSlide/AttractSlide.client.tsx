@@ -10,24 +10,26 @@ interface Props {
 	creditsNeeded: number;
 }
 
-// TODO: make this nice
 const AttractSlide = (props: Props) => {
 	const { playerCount, creditsRequired, creditsNeeded } = props;
 
 	const { credits } = useContext(MachineContext);
 	return (
 		<S.StyledSlide active={true}>
-			<div>Players: {playerCount}</div>
-			<div>
-				Credits: {credits}/{creditsRequired}
-			</div>
-			<div>
-				{creditsNeeded === 1
-					? 'Insert Coin'
-					: creditsNeeded > 1
-					? `Insert ${creditsNeeded} Coins`
-					: 'Press Start'}
-			</div>
+			<S.Video src="attract.mp4" autoPlay={true} loop={true} />
+			<S.Text>
+				<div>Players: {playerCount}</div>
+				<div>
+					Credits: {credits}/{creditsRequired}
+				</div>
+				<div>
+					{creditsNeeded === 1
+						? 'Insert Coin'
+						: creditsNeeded > 1
+						? `Insert ${creditsNeeded} Coins`
+						: 'Press Start'}
+				</div>
+			</S.Text>
 		</S.StyledSlide>
 	);
 };

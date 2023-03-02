@@ -8,6 +8,7 @@ import AttractSlide from '../Slides/AttractSlide/AttractSlide.client';
 import { creditsPerPlayer } from '@/const/Money/Money';
 import HardwareContext from '@/contexts/HardwareContext/HardwareContext';
 import { autoStartGamePlayers } from '@/const/Setup/Setup';
+import AudioContext from '@/contexts/AudioContext/AudioContext.client';
 
 // This controller handles state and logic for starting a game, including:
 //  Displays slide to attract players.
@@ -16,6 +17,7 @@ import { autoStartGamePlayers } from '@/const/Setup/Setup';
 const StartController = () => {
 	const { switches } = useContext(HardwareContext);
 	const machine = useContext(MachineContext);
+	const audio = useContext(AudioContext);
 	const { credits } = machine;
 	const [playerCount, setPlayerCount] = useState(1);
 	const [gameStartedPlayerCount, setGameStartedPlayerCount] = useState(autoStartGamePlayers);
@@ -31,7 +33,7 @@ const StartController = () => {
 			return startButton.addHitHandler({
 				onHit: () => {
 					if (creditsNeeded > 0) {
-						// TODO: play sound, flash lights, play video, something fun
+						audio.play({ name: 'shot' });
 					} else {
 						setGameStartedPlayerCount(playerCount);
 						machine.credits -= creditsRequired;
@@ -39,7 +41,7 @@ const StartController = () => {
 				},
 			});
 		}
-	}, [creditsNeeded, creditsRequired, machine, playerCount, startButton]);
+	}, [creditsNeeded, creditsRequired, machine, playerCount, startButton, audio]);
 
 	// Left flipper to decrease player count.
 	useEffect(() => {

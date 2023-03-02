@@ -1,4 +1,4 @@
-export type AudioNames = 'tires' | 'horn' | 'shot';
+export type AudioNames = 'tires' | 'horn' | 'shot' | 'rev';
 
 export interface AudioFile {
 	readonly name: AudioNames;
@@ -17,6 +17,10 @@ const audioFiles: ReadonlyArray<AudioFile> = [
 	{
 		name: 'shot',
 		file: 'shot.mp3',
+	},
+	{
+		name: 'rev',
+		file: 'rev.mp3',
 	},
 ];
 

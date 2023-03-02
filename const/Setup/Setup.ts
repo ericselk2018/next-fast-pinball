@@ -5,4 +5,4 @@ import { maxPlayers } from '../Constraints/Constraints';
 export const useVirtualHardware = true;
 
 // Only used while doing dev work - for game to start
-export const autoStartGamePlayers = maxPlayers;
+export const autoStartGamePlayers = 0;
