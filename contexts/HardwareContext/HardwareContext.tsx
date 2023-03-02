@@ -1,3 +1,4 @@
+import { CoilInfo, leftFlipperHoldCoil, leftFlipperMainCoil } from '@/const/Coils/Coils';
 import flippers, { FlipperInfo } from '@/const/Flippers/Flippers';
 import keyBindings from '@/const/KeyBindings/KeyBindings';
 import lights, { LightInfo } from '@/const/Lights/Lights';
@@ -34,6 +35,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		Array<boolean>(Math.max(...switches.map((aSwitch) => aSwitch.number))).fill(false)
 	);
 	const switchHitEventHandlers = useRef<SwitchHitEventHandler[]>([]);
+	const portWriter = useRef<WritableStreamDefaultWriter>();
 
 	const addSwitchHitEventHandler = useCallback((handler: SwitchHitEventHandler) => {
 		switchHitEventHandlers.current.push(handler);
@@ -50,6 +52,13 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		switchHitEventHandlers.current
 			.filter((handler) => handler.switchNumber === switchNumber)
 			.forEach((handler) => handler.onHit());
+	}, []);
+
+	const writeLine = useCallback(async (text: string) => {
+		const writer = portWriter.current;
+		if (writer) {
+			await writer.write(new TextEncoder().encode(text + '\r'));
+		}
 	}, []);
 
 	const open = useCallback(
@@ -95,9 +104,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					})
 				);
 				const writer = port.writable.getWriter();
-				const writeLine = async (text: string) => {
-					await writer.write(new TextEncoder().encode(text + '\r'));
-				};
+				portWriter.current = writer;
 				await writeLine('ID:');
 				await writeLine(`CH:${hardwareModel},1`);
 				await writeLine('SA:');
@@ -105,7 +112,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				setLastError(reason);
 			}
 		},
-		[notifySwitchHitEventHandlers, switchesOpen]
+		[notifySwitchHitEventHandlers, switchesOpen, writeLine]
 	);
 
 	useEffect(() => {
@@ -233,6 +240,32 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		};
 	}, []);
 
+	const enableOrDisableCoil = useCallback(
+		(args: { enable: boolean; coil: CoilInfo }) => {
+			const { enable } = args;
+			// TODO: figure out how flippers should work once docs are updated
+			writeLine(``);
+		},
+		[writeLine]
+	);
+
+	const enableOrDisableFlippers = useCallback(
+		(args: { enable: boolean }) => {
+			const { enable } = args;
+			enableOrDisableCoil({ enable, coil: leftFlipperMainCoil });
+			enableOrDisableCoil({ enable, coil: leftFlipperHoldCoil });
+		},
+		[enableOrDisableCoil]
+	);
+
+	const enableFlippers = useCallback(() => {
+		enableOrDisableFlippers({ enable: true });
+	}, [enableOrDisableFlippers]);
+
+	const disableFlippers = useCallback(() => {
+		enableOrDisableFlippers({ enable: false });
+	}, [enableOrDisableFlippers]);
+
 	const context: Hardware = useMemo(
 		() => ({
 			flippers: flippers.map(flipperInfoToFlipper),
@@ -241,8 +274,18 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			switches: switches.map(switchInfoToSwitch),
 			switchInfoToSwitch,
 			targetSwitchInfoToTargetSwitch,
+			enableFlippers,
+			disableFlippers,
 		}),
-		[flipperInfoToFlipper, lightInfoToLight, switchInfoToSwitch, targetInfoToKicker, targetSwitchInfoToTargetSwitch]
+		[
+			flipperInfoToFlipper,
+			lightInfoToLight,
+			switchInfoToSwitch,
+			targetInfoToKicker,
+			targetSwitchInfoToTargetSwitch,
+			enableFlippers,
+			disableFlippers,
+		]
 	);
 
 	if (lastError) {

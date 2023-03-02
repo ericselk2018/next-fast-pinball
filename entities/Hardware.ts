@@ -12,4 +12,6 @@ export default interface Hardware {
 	readonly lights: ReadonlyArray<Light>;
 	readonly switchInfoToSwitch: (switchInfo: SwitchInfo) => Switch;
 	readonly targetSwitchInfoToTargetSwitch: (targetSwitchInfo: TargetSwitchInfo) => TargetSwitch;
+	readonly enableFlippers: () => void;
+	readonly disableFlippers: () => void;
 }

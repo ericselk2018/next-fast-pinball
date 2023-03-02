@@ -33,7 +33,7 @@ const StartController = () => {
 			return startButton.addHitHandler({
 				onHit: () => {
 					if (creditsNeeded > 0) {
-						audio.play({ name: 'shot' });
+						audio.play({ name: 'crash' });
 					} else {
 						setGameStartedPlayerCount(playerCount);
 						machine.credits -= creditsRequired;
