@@ -62,7 +62,7 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 								task.switch === aSwitch.number
 						)
 					)
-					.map(switchInfoToSwitch),
+					.map(targetSwitchInfoToTargetSwitch),
 				completeSwitch: (args) =>
 					setTasksCompleted((tasksCompleted) => [
 						...tasksCompleted,

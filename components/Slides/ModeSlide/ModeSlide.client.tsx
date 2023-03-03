@@ -1,4 +1,3 @@
-import GameContext from '@/contexts/GameContext/GameContext.client';
 import Mode from '@/entities/Mode';
 import { useEffect, useRef } from 'react';
 import * as S from './ModeSlide.styles';

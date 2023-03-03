@@ -1,6 +1,7 @@
 export interface SwitchInfo {
 	readonly number: number;
 	readonly name: string;
+	readonly normallyClosed?: boolean;
 }
 
 export interface TargetSwitchInfo extends SwitchInfo {

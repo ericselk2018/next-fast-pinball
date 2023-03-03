@@ -19,8 +19,8 @@ const usbProductId = 4155;
 const hardwareModel = 2000;
 
 interface SwitchHitEventHandler {
-	switchNumber: number;
-	onHit: () => void;
+	switchNumbers: number[];
+	onHit: (switchInfo: SwitchInfo) => void;
 }
 
 const HardwareContext = createContext<Hardware>(null!);
@@ -49,9 +49,16 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 
 	const notifySwitchHitEventHandlers = useCallback((args: { switchNumber: number }) => {
 		const { switchNumber } = args;
-		switchHitEventHandlers.current
-			.filter((handler) => handler.switchNumber === switchNumber)
-			.forEach((handler) => handler.onHit());
+		switchHitEventHandlers.current.forEach((handler) =>
+			handler.switchNumbers
+				.filter((number) => number === switchNumber)
+				.forEach(() => {
+					const switchInfo = switches.find((switchInfo) => switchInfo.number === switchNumber);
+					if (switchInfo) {
+						handler.onHit(switchInfo);
+					}
+				})
+		);
 	}, []);
 
 	const writeLine = useCallback(async (text: string) => {
@@ -93,8 +100,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 												switchNumber === switchChangedNumber ? isOpenNow : wasOpen
 											)
 										);
-										// TODO: add normally closed logic here
-										if (!isOpenNow) {
+										const switchInfo = switches.find(
+											(aSwitch) => aSwitch.number === switchChangedNumber
+										);
+										if (switchInfo?.normallyClosed !== isOpenNow) {
 											notifySwitchHitEventHandlers({ switchNumber: switchChangedNumber });
 										}
 									}
@@ -159,8 +168,9 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 						switchesOpen.map((open, number) => (number === keyBinding.switch.number ? false : open))
 					);
 
-					// TODO: add normally closed logic here
-					notifySwitchHitEventHandlers({ switchNumber: keyBinding.switch.number });
+					if (!keyBinding.switch.normallyClosed) {
+						notifySwitchHitEventHandlers({ switchNumber: keyBinding.switch.number });
+					}
 				}
 			};
 			document.addEventListener('keydown', handleKeyDown);
@@ -181,14 +191,15 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					setSwitchesOpen((switchesOpen) =>
 						switchesOpen.map((open, number) => (number === keyBinding.switch.number ? true : open))
 					);
-					// TODO: add normally closed logic here
-					// notifySwitchHitEventHandlers({ switchNumber: keyBinding.switch.number });
+					if (keyBinding.switch.normallyClosed) {
+						notifySwitchHitEventHandlers({ switchNumber: keyBinding.switch.number });
+					}
 				}
 			};
 			document.addEventListener('keyup', handleKeyUp);
 			return () => document.removeEventListener('keyup', handleKeyUp);
 		}
-	}, [usingVirtualHardware]);
+	}, [usingVirtualHardware, notifySwitchHitEventHandlers]);
 
 	const switchInfoToSwitch = useCallback(
 		(switchInfo: SwitchInfo): Switch => {
@@ -196,7 +207,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			return {
 				addHitHandler: (args) => {
 					const { onHit } = args;
-					return addSwitchHitEventHandler({ switchNumber: number, onHit });
+					return addSwitchHitEventHandler({ switchNumbers: [number], onHit });
 				},
 				name,
 				number,
@@ -266,6 +277,14 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		enableOrDisableFlippers({ enable: false });
 	}, [enableOrDisableFlippers]);
 
+	const addSwitchHitHandler = useCallback(
+		(args: { switches: SwitchInfo[]; onHit: (switchInfo: SwitchInfo) => void }) => {
+			const { switches, onHit } = args;
+			return addSwitchHitEventHandler({ switchNumbers: switches.map((switchInfo) => switchInfo.number), onHit });
+		},
+		[addSwitchHitEventHandler]
+	);
+
 	const context: Hardware = useMemo(
 		() => ({
 			flippers: flippers.map(flipperInfoToFlipper),
@@ -276,6 +295,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			targetSwitchInfoToTargetSwitch,
 			enableFlippers,
 			disableFlippers,
+			addSwitchHitHandler,
 		}),
 		[
 			flipperInfoToFlipper,
@@ -285,6 +305,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			targetSwitchInfoToTargetSwitch,
 			enableFlippers,
 			disableFlippers,
+			addSwitchHitHandler,
 		]
 	);
 
