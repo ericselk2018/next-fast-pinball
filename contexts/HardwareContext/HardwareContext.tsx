@@ -20,8 +20,8 @@ const hardwareModel = 2000;
 
 interface SwitchHitEventHandler {
 	switchNumbers: number[];
-	onHit: (switchInfo: SwitchInfo) => void;
-	onToggle: (args: { switchInfo: SwitchInfo; closed: boolean }) => void;
+	onHit?: (switchInfo: SwitchInfo) => void;
+	onToggle?: (args: { switchInfo: SwitchInfo; closed: boolean }) => void;
 }
 
 // This context wraps everything, so non-null assertion is pretty safe and keeps consumer code cleaner.
@@ -58,10 +58,9 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				.filter((n) => n === number)
 				.forEach(() => {
 					if (!!normallyClosed !== closed) {
-						console.log({ name: switchInfo.name, closed, normallyClosed });
-						handler.onHit(switchInfo);
+						handler.onHit?.(switchInfo);
 					}
-					handler.onToggle({ switchInfo, closed });
+					handler.onToggle?.({ switchInfo, closed });
 				})
 		);
 	}, []);
@@ -215,9 +214,6 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					return addSwitchHitEventHandler({
 						switchNumbers: [number],
 						onHit,
-						onToggle: () => {
-							//
-						},
 					});
 				},
 				addToggleHandler: (args) => {
@@ -225,9 +221,6 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					return addSwitchHitEventHandler({
 						switchNumbers: [number],
 						onToggle,
-						onHit: () => {
-							//
-						},
 					});
 				},
 				name,
@@ -303,8 +296,8 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const addSwitchHandler = useCallback(
 		(args: {
 			switches: ReadonlyArray<SwitchInfo>;
-			onHit: (switchInfo: SwitchInfo) => void;
-			onToggle: (args: { switchInfo: SwitchInfo; closed: boolean }) => void;
+			onHit?: (switchInfo: SwitchInfo) => void;
+			onToggle?: (args: { switchInfo: SwitchInfo; closed: boolean }) => void;
 		}) => {
 			const { switches, onHit, onToggle } = args;
 			return addSwitchHitEventHandler({

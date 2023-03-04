@@ -8,7 +8,7 @@ import Player from '@/entities/Player';
 import Shot from '@/entities/Shot';
 import { filterUndefined, replaceItemAtIndex } from '@/lib/array/array';
 import { useSwitch, useToggleSwitches } from '@/lib/switch/switch';
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import HardwareContext from '../HardwareContext/HardwareContext';
 
 interface CompletedTask {
@@ -30,7 +30,7 @@ export const GameContextProvider = ({
 	playerInitials: string[];
 }) => {
 	const hardware = useContext(HardwareContext);
-	const { targetSwitchInfoToTargetSwitch } = hardware;
+	const { targetSwitchInfoToTargetSwitch, addSwitchHandler } = hardware;
 	const [scores, setScores] = useState(Array(playerInitials.length).fill(startingScore));
 	const [totalBalls, setTotalBalls] = useState(Array(playerInitials.length).fill(startingBallsPerPlayer));
 	const [usedBalls, setUsedBalls] = useState(Array(playerInitials.length).fill(0));
@@ -43,6 +43,7 @@ export const GameContextProvider = ({
 	const [saucerHolesWithBallsSwitchNumbers, setSaucerHolesWithBallsSwitchNumbers] = useState<number[]>([]);
 	const [ballsInPlay, setBallsInPlay] = useState(0);
 
+	// TODO: Should useEffect and useSwitch move to GameController?  What goes in controller vs context?
 	// Increase balls in play when inline switch triggers.
 	useSwitch(
 		() => {
@@ -87,6 +88,17 @@ export const GameContextProvider = ({
 						)
 					)
 					.map(targetSwitchInfoToTargetSwitch),
+				incompleteSwitches: switches
+					.filter(
+						(aSwitch) =>
+							!tasksCompleted.some(
+								(task) =>
+									task.mode === modeInfo.name &&
+									task.step === modeStepInfo.name &&
+									task.switch === aSwitch.number
+							)
+					)
+					.map(targetSwitchInfoToTargetSwitch),
 				completeSwitch: (args) =>
 					setTasksCompleted((tasksCompleted) => [
 						...tasksCompleted,
@@ -110,6 +122,7 @@ export const GameContextProvider = ({
 	);
 
 	const currentMode = modeInfoToMode(modes[currentModeIndex]);
+	const currentModeStep = currentMode.steps.find((s) => s.completedSwitches.length < s.count);
 
 	const players: Player[] = playerInitials.map(
 		(initials, index): Player => ({
@@ -167,6 +180,34 @@ export const GameContextProvider = ({
 		).map(targetSwitchInfoToTargetSwitch);
 	}, [saucerHolesWithBallsSwitchNumbers, targetSwitchInfoToTargetSwitch]);
 
+	useEffect(() => {
+		if (!currentModeStep) {
+			// mode complete, you win!
+		}
+	}, [currentModeStep]);
+
+	// When a switch in the current step is hit, mark as complete.
+	useEffect(() => {
+		if (currentModeStep) {
+			const { incompleteSwitches } = currentModeStep;
+			addSwitchHandler({
+				onHit: (aSwitch) => {
+					setTasksCompleted((tasksCompleted) => {
+						const t = tasksCompleted.find((a) => a.switch === aSwitch.number);
+						if (t) {
+							return tasksCompleted;
+						}
+						return [
+							...tasksCompleted,
+							{ mode: currentMode.name, step: currentModeStep.name, switch: aSwitch.number },
+						];
+					});
+				},
+				switches: incompleteSwitches,
+			});
+		}
+	}, [addSwitchHandler, currentMode.name, currentModeStep]);
+
 	const context: Game = useMemo(
 		() => ({
 			saucerHolesWithBalls,
@@ -177,6 +218,8 @@ export const GameContextProvider = ({
 			set ballsInPlay(value) {
 				setBallsInPlay(value);
 			},
+			currentModeStep,
+			currentModeIndex,
 			get currentMode() {
 				return currentMode;
 			},
@@ -204,6 +247,8 @@ export const GameContextProvider = ({
 			addShot,
 			ballsInPlay,
 			currentMode,
+			currentModeStep,
+			currentModeIndex,
 			currentPlayer,
 			modeInfoToMode,
 			nextPlayer,

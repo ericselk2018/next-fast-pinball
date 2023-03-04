@@ -9,8 +9,7 @@ import * as S from './GameController.styles';
 // We now have access to GameContext, and any components we render also can access it.
 const GameController = () => {
 	const game = useContext(GameContext);
-	const { currentMode, ballsInPlay, modes } = game;
-	const currentModeIndex = modes.findIndex((mode) => mode.name === currentMode.name);
+	const { ballsInPlay, modes, currentModeIndex } = game;
 
 	// Switch modes using flippers whenever no balls in play.
 	useFlippers(

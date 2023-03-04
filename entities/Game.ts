@@ -1,4 +1,5 @@
 import Mode from './Mode';
+import ModeStep from './ModeStep';
 import Player from './Player';
 import Shot from './Shot';
 import TargetSwitch from './TargetSwitch';
@@ -9,6 +10,8 @@ export default interface Game {
 	readonly nextPlayer: Player;
 	ballsInPlay: number;
 	currentMode: Mode;
+	readonly currentModeStep: ModeStep | undefined;
+	readonly currentModeIndex: number;
 	readonly shots: ReadonlyArray<Shot>;
 	addShot: (shot: Shot) => void;
 	videoPlaying: string;

@@ -5,5 +5,6 @@ export default interface ModeStep {
 	readonly switches: ReadonlyArray<TargetSwitch>;
 	readonly count: number;
 	readonly completedSwitches: ReadonlyArray<TargetSwitch>;
+	readonly incompleteSwitches: ReadonlyArray<TargetSwitch>;
 	completeSwitch: (args: { switch: TargetSwitch }) => void;
 }
