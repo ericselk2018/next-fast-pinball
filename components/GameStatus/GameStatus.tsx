@@ -16,7 +16,7 @@ const GameStatus = () => {
 							<S.Player key={index} active={player.number === currentPlayer.number}>
 								<S.Score>{score.toLocaleString()}</S.Score>
 								<S.Balls>
-									<img src="ball.png" />
+									<img src="images/ball.png" />
 									<div>
 										{usedBalls}/{totalBalls}
 									</div>

@@ -86,6 +86,10 @@ Basic NextJS bootstrap, with very few changes. You don't need to spend much time
 
 All React components go here. They are all client components (not server), since we don't care about SSR, SSG or SEO.
 
+#### Blink
+
+Component for blinking (flashing) text. Used for selecting number of players and initials before game starts.
+
 #### ClientApp
 
 Entry point. Provides contexts and renders StartController.
@@ -125,6 +129,10 @@ Holds all of the constants - things that do not change, unless a developer chang
 #### AudioFiles
 
 Information about audio files.
+
+#### Coils
+
+List of drivers/coils in your game.
 
 #### Constraints
 
@@ -254,13 +262,17 @@ Stuff that Math might have eventually.
 
 Do stuff with objects, easier.
 
+#### string
+
+String functions.
+
 ### node_modules
 
 You didn't see me.
 
 ### public
 
-NextJS concept - put font, video, image and audio files here. TODO: add subfolders
+NextJS concept - put font, video, image and audio files here.
 
 ## Design
 

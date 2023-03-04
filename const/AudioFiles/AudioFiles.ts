@@ -8,23 +8,23 @@ export interface AudioFile {
 const audioFiles: ReadonlyArray<AudioFile> = [
 	{
 		name: 'tires',
-		file: 'tires.mp3',
+		file: 'audio/tires.mp3',
 	},
 	{
 		name: 'horn',
-		file: 'horn.mp3',
+		file: 'audio/horn.mp3',
 	},
 	{
 		name: 'shot',
-		file: 'shot.mp3',
+		file: 'audio/shot.mp3',
 	},
 	{
 		name: 'rev',
-		file: 'rev.mp3',
+		file: 'audio/rev.mp3',
 	},
 	{
 		name: 'crash',
-		file: 'crash.mp3',
+		file: 'audio/crash.mp3',
 	},
 ];
 

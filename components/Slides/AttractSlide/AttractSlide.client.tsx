@@ -25,7 +25,7 @@ const AttractSlide = (props: Props) => {
 	const { credits } = useContext(MachineContext);
 	return (
 		<S.StyledSlide active={true}>
-			<S.Video src="attract.mp4" autoPlay={true} loop={true} />
+			<S.Video src="videos/attract.mp4" autoPlay={true} loop={true} />
 			<S.Text>
 				<div>
 					Players: <Blink blinking={selectingNumberOfPlayers} text={playerInitials.length.toString()} />

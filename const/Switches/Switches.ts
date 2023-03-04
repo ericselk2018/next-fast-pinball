@@ -20,56 +20,56 @@ export const inlaneSwitch: SwitchInfo = { number: 6, name: 'Inlane Rollover' };
 export const domSwitch: TargetSwitchInfo = {
 	number: 7,
 	name: 'Dom Target',
-	image: 'dom.jpg',
-	videos: ['dom1.mp4'],
+	image: 'images/dom.jpg',
+	videos: ['videos/dom1.mp4'],
 };
 export const brianSwitch: TargetSwitchInfo = {
 	number: 100,
 	name: 'Brian Target',
-	image: 'brian.jpg',
-	videos: ['brian1.mp4'],
+	image: 'images/brian.jpg',
+	videos: ['videos/brian1.mp4'],
 };
 export const miaSwitch: TargetSwitchInfo = {
 	number: 101,
 	name: 'Mia Target',
-	image: 'mia.jpg',
-	videos: ['mia1.mp4'],
+	image: 'images/mia.jpg',
+	videos: ['videos/mia1.mp4'],
 };
 export const lettySwitch: TargetSwitchInfo = {
 	number: 102,
 	name: 'Letty Target',
-	image: 'letty.jpg',
-	videos: ['letty1.mp4'],
+	image: 'images/letty.jpg',
+	videos: ['videos/letty1.mp4'],
 };
 export const skylineSwitch: TargetSwitchInfo = {
 	number: 16,
 	name: 'Skyline Target',
-	image: 'skyline.jpg',
-	videos: ['skyline1.mp4'],
+	image: 'images/skyline.jpg',
+	videos: ['videos/skyline1.mp4'],
 };
 export const chargerSwitch: TargetSwitchInfo = {
 	number: 103,
 	name: 'Charger Target',
-	image: 'charger.jpg',
-	videos: ['charger1.mp4'],
+	image: 'images/charger.jpg',
+	videos: ['videos/charger1.mp4'],
 };
 export const domHomeSwitch: TargetSwitchInfo = {
 	number: 17,
 	name: 'Dom Home',
-	image: 'domHome.jpg',
-	videos: ['domHome1.mp4'],
+	image: 'images/domHome.jpg',
+	videos: ['videos/domHome1.mp4'],
 };
 export const rogersTruckSwitch: TargetSwitchInfo = {
 	number: 18,
 	name: 'Rogers Truck',
-	image: 'rogersTruck.jpg',
-	videos: ['rogersTruck1.mp4'],
+	image: 'images/rogersTruck.jpg',
+	videos: ['videos/rogersTruck1.mp4'],
 };
 export const underRogersTruckSwitch: TargetSwitchInfo = {
 	number: 19,
 	name: 'Under Rogers Truck',
-	image: 'underRogersTruck.jpg',
-	videos: ['underRogersTruck1.mp4'],
+	image: 'images/underRogersTruck.jpg',
+	videos: ['videos/underRogersTruck1.mp4'],
 };
 
 export const driverSwitches: ReadonlyArray<TargetSwitchInfo> = [domSwitch, brianSwitch, miaSwitch, lettySwitch];

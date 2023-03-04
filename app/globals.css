@@ -6,12 +6,12 @@
 
 @font-face {
 	font-family: 'font1';
-	src: url('/font1.ttf');
+	src: url('/fonts/font1.ttf');
 }
 
 @font-face {
 	font-family: 'font2';
-	src: url('/font2.ttf');
+	src: url('/fonts/font2.ttf');
 }
 
 html,
