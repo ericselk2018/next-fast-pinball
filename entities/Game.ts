@@ -1,6 +1,7 @@
 import Mode from './Mode';
 import Player from './Player';
 import Shot from './Shot';
+import TargetSwitch from './TargetSwitch';
 
 export default interface Game {
 	readonly players: ReadonlyArray<Player>;
@@ -12,4 +13,5 @@ export default interface Game {
 	addShot: (shot: Shot) => void;
 	videoPlaying: string;
 	readonly modes: ReadonlyArray<Mode>;
+	readonly saucerHolesWithBalls: ReadonlyArray<TargetSwitch>;
 }

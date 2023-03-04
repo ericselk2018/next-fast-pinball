@@ -1,9 +1,11 @@
-import { coinSlotSwitch, inlaneSwitch } from '@/const/Switches/Switches';
+import { coinSlotSwitch } from '@/const/Switches/Switches';
 import Machine from '@/entities/Machine';
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import AudioContext from '../AudioContext/AudioContext.client';
 import HardwareContext from '../HardwareContext/HardwareContext';
 
+// This context wraps everything, so non-null assertion is pretty safe and keeps consumer code cleaner.
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const MachineContext = createContext<Machine>(null!);
 
 export const MachineContextProvider = ({ children }: { children: ReactNode }) => {

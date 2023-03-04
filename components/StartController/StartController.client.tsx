@@ -1,5 +1,5 @@
 import { GameContextProvider } from '@/contexts/GameContext/GameContext.client';
-import { startButtonSwitch } from '@/const/Switches/Switches';
+import { selectButtonSwitch, startButtonSwitch } from '@/const/Switches/Switches';
 import { useContext, useState } from 'react';
 import GameController from '../GameController/GameController.client';
 import MachineContext from '@/contexts/MachineContext/MachineContext';
@@ -9,6 +9,8 @@ import { creditsPerPlayer } from '@/const/Money/Money';
 import { autoStartGamePlayers } from '@/const/Setup/Setup';
 import AudioContext from '@/contexts/AudioContext/AudioContext.client';
 import { useFlippers, useSwitch } from '@/lib/switch/switch';
+import { replaceItemAtIndex } from '@/lib/array/array';
+import { changeLetterAt } from '@/lib/string/string';
 
 // This controller handles state and logic for starting a game, including:
 //  Displays slide to attract players.
@@ -18,9 +20,13 @@ const StartController = () => {
 	const machine = useContext(MachineContext);
 	const audio = useContext(AudioContext);
 	const { credits } = machine;
-	const [playerCount, setPlayerCount] = useState(1);
-	const [gameStartedPlayerCount, setGameStartedPlayerCount] = useState(autoStartGamePlayers);
-	const creditsRequired = creditsPerPlayer * playerCount;
+	const [playerInitials, setPlayerInitials] = useState(['AAA']);
+	const [gameStarted, setGameStarted] = useState(!!autoStartGamePlayers);
+	const [selected, setSelected] = useState([0, 0]);
+	const selectingNumberOfPlayers = !selected[0];
+	const selectedPlayerIndex = selected[0] - 1;
+	const selectedInitialIndex = selected[1];
+	const creditsRequired = creditsPerPlayer * playerInitials.length;
 	const creditsNeeded = creditsRequired - credits;
 
 	// Start game when start button hit, if enough credits.
@@ -29,27 +35,85 @@ const StartController = () => {
 			if (creditsNeeded > 0) {
 				audio.play({ name: 'crash' });
 			} else {
-				setGameStartedPlayerCount(playerCount);
+				setGameStarted(true);
 				machine.credits -= creditsRequired;
 			}
 		},
-		[audio, creditsNeeded, creditsRequired, machine, playerCount],
+		[audio, creditsNeeded, creditsRequired, machine],
 		startButtonSwitch
 	);
 
-	// Flippers change player count.
-	useFlippers((left) => {
-		setPlayerCount((playerCount) => (left ? Math.max(playerCount - 1, 1) : Math.min(playerCount + 1, maxPlayers)));
-	}, []);
+	// Flippers change selected value.
+	useFlippers(
+		(left) => {
+			if (selectingNumberOfPlayers) {
+				setPlayerInitials((playerInitials) => {
+					if (left) {
+						if (playerInitials.length > 1) {
+							return playerInitials.slice(0, -1);
+						}
+					} else if (playerInitials.length < maxPlayers) {
+						return [...playerInitials, 'AAA'];
+					}
+					return playerInitials;
+				});
+			} else {
+				setPlayerInitials((playerInitials) =>
+					replaceItemAtIndex({
+						array: playerInitials,
+						index: selectedPlayerIndex,
+						item: changeLetterAt({
+							text: playerInitials[selectedPlayerIndex],
+							index: selectedInitialIndex,
+							down: left,
+						}),
+					})
+				);
+			}
+		},
+		[selectedInitialIndex, selectedPlayerIndex, selectingNumberOfPlayers]
+	);
 
-	// FUTURE: Add select button to support selecting more than just number of players.
+	// Update selection when selected button is pressed.
+	useSwitch(
+		() => {
+			setSelected((selected) => {
+				// If number of players is selected, move selection to first letter of initials for player 1
+				if (selectingNumberOfPlayers) {
+					return [1, 0];
+				}
+				// If the last initial is selected, we need to advance selection.
+				else if (selectedInitialIndex === playerInitials[selectedPlayerIndex].length - 1) {
+					// If last initial of last player is selected, return selection to number of players.
+					if (selectedPlayerIndex === playerInitials.length - 1) {
+						return [0, 0];
+					} else {
+						// Otherwise move selection to first initial of next player.
+						return [selected[0] + 1, 0];
+					}
+				} else {
+					// Otherwise move selection to next initial for current player.
+					return [selected[0], selected[1] + 1];
+				}
+			});
+		},
+		[playerInitials, selectedInitialIndex, selectedPlayerIndex, selectingNumberOfPlayers],
+		selectButtonSwitch
+	);
 
-	return gameStartedPlayerCount ? (
-		<GameContextProvider playerCount={gameStartedPlayerCount}>
+	return gameStarted ? (
+		<GameContextProvider playerInitials={playerInitials}>
 			<GameController />
 		</GameContextProvider>
 	) : (
-		<AttractSlide creditsNeeded={creditsNeeded} creditsRequired={creditsRequired} playerCount={playerCount} />
+		<AttractSlide
+			creditsNeeded={creditsNeeded}
+			creditsRequired={creditsRequired}
+			playerInitials={playerInitials}
+			selectedPlayerIndex={selectedPlayerIndex}
+			selectedInitialIndex={selectedInitialIndex}
+			selectingNumberOfPlayers={selectingNumberOfPlayers}
+		/>
 	);
 };
 

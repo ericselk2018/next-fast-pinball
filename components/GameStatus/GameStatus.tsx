@@ -9,20 +9,23 @@ const GameStatus = () => {
 	return (
 		<S.Container>
 			<S.Players>
-				{players.map((player, index) => {
-					const { score, usedBalls, totalBalls } = player;
-					return (
-						<S.Player key={index} active={player.number === currentPlayer.number}>
-							<S.Score>{score.toLocaleString()}</S.Score>
-							<S.Balls>
-								<img src="ball.png" />
-								<div>
-									{usedBalls}/{totalBalls}
-								</div>
-							</S.Balls>
-						</S.Player>
-					);
-				})}
+				<>
+					{players.map((player, index) => {
+						const { score, usedBalls, totalBalls } = player;
+						return (
+							<S.Player key={index} active={player.number === currentPlayer.number}>
+								<S.Score>{score.toLocaleString()}</S.Score>
+								<S.Balls>
+									<img src="ball.png" />
+									<div>
+										{usedBalls}/{totalBalls}
+									</div>
+								</S.Balls>
+							</S.Player>
+						);
+					})}
+					<S.CurrentPlayerInitials>{currentPlayer.initials}</S.CurrentPlayerInitials>
+				</>
 			</S.Players>
 			<S.Shots>
 				{shots.map((shot, index) => {

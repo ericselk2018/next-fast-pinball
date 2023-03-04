@@ -3,6 +3,7 @@ import styled from 'styled-components';
 export const Container = styled.div``;
 
 export const Players = styled.div`
+	position: relative;
 	display: flex;
 	flex-wrap: wrap;
 	font-size: 80px;
@@ -31,6 +32,13 @@ export const Balls = styled.div`
 		width: 0.8em;
 		height: auto;
 	}
+`;
+
+export const CurrentPlayerInitials = styled.div`
+	position: absolute;
+	left: 0;
+	right: 0;
+	text-align: center;
 `;
 
 export const Shots = styled.div`

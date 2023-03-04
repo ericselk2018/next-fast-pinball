@@ -24,3 +24,8 @@ export const Text = styled.div`
 	font-size: 100px;
 	background-color: rgba(0, 0, 0, 0.5);
 `;
+
+export const PlayerInitials = styled.div`
+	display: flex;
+	gap: 1em;
+`;

@@ -5,6 +5,8 @@ interface AudioContext {
 	play: (args: { name: AudioNames }) => void;
 }
 
+// This context wraps everything, so non-null assertion is pretty safe and keeps consumer code cleaner.
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const AudioContext = createContext<AudioContext>(null!);
 
 export const AudioContextProvider = ({ children }: { children: ReactNode }) => {

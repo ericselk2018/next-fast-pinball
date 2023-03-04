@@ -8,4 +8,5 @@ export default interface Player {
 	readonly ballsRemaining: number;
 	readonly initials: string;
 	readonly hasCompletedMode: (args: { mode: Mode }) => boolean;
+	readonly completeMode: (args: { mode: Mode }) => void;
 }

@@ -14,8 +14,9 @@ export default interface Hardware {
 	readonly targetSwitchInfoToTargetSwitch: (targetSwitchInfo: TargetSwitchInfo) => TargetSwitch;
 	readonly enableFlippers: () => void;
 	readonly disableFlippers: () => void;
-	readonly addSwitchHitHandler: (args: {
-		switches: SwitchInfo[];
+	readonly addSwitchHandler: (args: {
+		switches: ReadonlyArray<SwitchInfo>;
 		onHit: (switchInfo: SwitchInfo) => void;
+		onToggle: (args: { switchInfo: SwitchInfo; closed: boolean }) => void;
 	}) => () => void;
 }

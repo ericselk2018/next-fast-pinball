@@ -10,6 +10,7 @@ import {
 	inlaneSwitch,
 	leftFlipperButtonSwitch,
 	rightFlipperButtonSwitch,
+	selectButtonSwitch,
 	startButtonSwitch,
 	SwitchInfo,
 } from '../Switches/Switches';
@@ -19,6 +20,7 @@ const keyBindings: ReadonlyArray<KeyBindingInfo> = [
 	{ key: 'Shift', location: 2, switch: rightFlipperButtonSwitch },
 	{ key: 'c', switch: coinSlotSwitch },
 	{ key: 's', switch: startButtonSwitch },
+	{ key: 'Tab', switch: selectButtonSwitch },
 	{ key: 'i', switch: inlaneSwitch },
 	{ key: 'd', switch: domSwitch },
 ];

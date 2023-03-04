@@ -7,3 +7,7 @@ export const replaceItemAtIndex = <T>(args: { array: Array<T>; index: number; it
 	const { array } = args;
 	return array.map((item, index) => (index === args.index ? args.item : item));
 };
+
+export const filterUndefined = <T>(array: Array<T | undefined>) => {
+	return array.filter((item) => item !== undefined) as Exclude<T, undefined>[];
+};

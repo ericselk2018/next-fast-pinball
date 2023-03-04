@@ -1,13 +1,14 @@
 import modes, { ModeInfo, ModeStepInfo } from '@/const/Modes/Modes';
 import { startingBallsPerPlayer, startingScore } from '@/const/Rules/Rules';
-import { inlaneSwitch } from '@/const/Switches/Switches';
+import { inlaneSwitch, kickerSwitches } from '@/const/Switches/Switches';
 import Game from '@/entities/Game';
 import Mode from '@/entities/Mode';
 import ModeStep from '@/entities/ModeStep';
 import Player from '@/entities/Player';
 import Shot from '@/entities/Shot';
-import { replaceItemAtIndex } from '@/lib/array/array';
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { filterUndefined, replaceItemAtIndex } from '@/lib/array/array';
+import { useSwitch, useToggleSwitches } from '@/lib/switch/switch';
+import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import HardwareContext from '../HardwareContext/HardwareContext';
 
 interface CompletedTask {
@@ -16,35 +17,58 @@ interface CompletedTask {
 	switch: number;
 }
 
+// non-null assertion is to keep consumer code cleaner, if we try to use this context in a component
+//  that isn't inside the context, at least we should have a very obvious error and fix it quickly.
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const GameContext = createContext<Game>(null!);
 
-export const GameContextProvider = ({ children, playerCount }: { children: ReactNode; playerCount: number }) => {
+export const GameContextProvider = ({
+	children,
+	playerInitials,
+}: {
+	children: ReactNode;
+	playerInitials: string[];
+}) => {
 	const hardware = useContext(HardwareContext);
-	const { switchInfoToSwitch, targetSwitchInfoToTargetSwitch } = hardware;
-	const [scores, setScores] = useState(Array(playerCount).fill(startingScore));
-	const [totalBalls, setTotalBalls] = useState(Array(playerCount).fill(startingBallsPerPlayer));
-	const [usedBalls, setUsedBalls] = useState(Array(playerCount).fill(0));
-	const [initials, setInitials] = useState(Array(playerCount).fill(''));
-	const [modesCompleted, setModesCompleted] = useState<string[][]>(Array(playerCount).fill([]));
+	const { targetSwitchInfoToTargetSwitch } = hardware;
+	const [scores, setScores] = useState(Array(playerInitials.length).fill(startingScore));
+	const [totalBalls, setTotalBalls] = useState(Array(playerInitials.length).fill(startingBallsPerPlayer));
+	const [usedBalls, setUsedBalls] = useState(Array(playerInitials.length).fill(0));
+	const [modesCompleted, setModesCompleted] = useState<string[][]>(Array(playerInitials.length).fill([]));
 	const [currentModeIndex, setCurrentModeIndex] = useState(0);
 	const [tasksCompleted, setTasksCompleted] = useState<CompletedTask[]>([]);
 	const [shots, setShots] = useState<Shot[]>([]);
 	const [videoPlaying, setVideoPlaying] = useState('');
 	const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-	const [saucerHolesWithBalls, setSaucerHolesWithBalls] = useState<number[]>([]);
+	const [saucerHolesWithBallsSwitchNumbers, setSaucerHolesWithBallsSwitchNumbers] = useState<number[]>([]);
 	const [ballsInPlay, setBallsInPlay] = useState(0);
 
-	const inlane = hardware.switches.find((aSwitch) => aSwitch.number === inlaneSwitch.number);
+	// Increase balls in play when inline switch triggers.
+	useSwitch(
+		() => {
+			setBallsInPlay((ballsInPlay) => ballsInPlay + 1);
+		},
+		[],
+		inlaneSwitch
+	);
 
-	useEffect(() => {
-		if (inlane) {
-			return inlane.addHitHandler({
-				onHit: () => {
-					setBallsInPlay((ballsInPlay) => ballsInPlay + 1);
-				},
+	useToggleSwitches(
+		({ closed, switchInfo }) => {
+			const { number } = switchInfo;
+			setSaucerHolesWithBallsSwitchNumbers((saucerHolesWithBalls) => {
+				if (closed) {
+					if (saucerHolesWithBalls.includes(number)) {
+						return saucerHolesWithBalls;
+					}
+					return [...saucerHolesWithBalls, number];
+				} else {
+					return saucerHolesWithBalls.filter((n) => n !== number);
+				}
 			});
-		}
-	}, [inlane]);
+		},
+		[],
+		kickerSwitches
+	);
 
 	const modeStepInfoToModeStep = useCallback(
 		(modeStepInfo: ModeStepInfo, modeInfo: ModeInfo): ModeStep => {
@@ -70,7 +94,7 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 					]),
 			};
 		},
-		[switchInfoToSwitch, tasksCompleted]
+		[targetSwitchInfoToTargetSwitch, tasksCompleted]
 	);
 
 	const modeInfoToMode = useCallback(
@@ -87,7 +111,7 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 
 	const currentMode = modeInfoToMode(modes[currentModeIndex]);
 
-	const players: Player[] = initials.map(
+	const players: Player[] = playerInitials.map(
 		(initials, index): Player => ({
 			number: index + 1,
 			initials,
@@ -107,6 +131,18 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 				return this.totalBalls - this.usedBalls;
 			},
 			hasCompletedMode: ({ mode }: { mode: Mode }) => modesCompleted[index].includes(mode.name),
+			completeMode: ({ mode }: { mode: Mode }) => {
+				setModesCompleted((modesCompleted) => {
+					if (modesCompleted[index].includes(mode.name)) {
+						return modesCompleted;
+					}
+					return replaceItemAtIndex({
+						array: modesCompleted,
+						index,
+						item: [...modesCompleted[index], mode.name],
+					});
+				});
+			},
 			get score() {
 				return scores[index];
 			},
@@ -123,8 +159,17 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 		setShots((shots) => [...shots, shot]);
 	}, []);
 
+	const saucerHolesWithBalls = useMemo(() => {
+		return filterUndefined(
+			saucerHolesWithBallsSwitchNumbers.map((saucerHolesWithBallsSwitchNumber) =>
+				kickerSwitches.find((kickerSwitch) => kickerSwitch.number === saucerHolesWithBallsSwitchNumber)
+			)
+		).map(targetSwitchInfoToTargetSwitch);
+	}, [saucerHolesWithBallsSwitchNumbers, targetSwitchInfoToTargetSwitch]);
+
 	const context: Game = useMemo(
 		() => ({
+			saucerHolesWithBalls,
 			modes: modes.map(modeInfoToMode),
 			get ballsInPlay() {
 				return ballsInPlay;
@@ -155,7 +200,18 @@ export const GameContextProvider = ({ children, playerCount }: { children: React
 				setVideoPlaying(video);
 			},
 		}),
-		[addShot, ballsInPlay, currentMode, currentPlayer, modeInfoToMode, nextPlayer, players, shots, videoPlaying]
+		[
+			addShot,
+			ballsInPlay,
+			currentMode,
+			currentPlayer,
+			modeInfoToMode,
+			nextPlayer,
+			players,
+			shots,
+			videoPlaying,
+			saucerHolesWithBalls,
+		]
 	);
 
 	return <GameContext.Provider value={context}>{children}</GameContext.Provider>;

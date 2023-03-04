@@ -15,6 +15,7 @@ export const rightFlipperEndOfStrokeSwitch: SwitchInfo = { number: 3, name: 'Rig
 export const rightFlipperButtonSwitch: SwitchInfo = { number: 9, name: 'Right Flipper Button' };
 export const coinSlotSwitch: SwitchInfo = { number: 11, name: 'Coin Slot' };
 export const startButtonSwitch: SwitchInfo = { number: 10, name: 'Start Button' };
+export const selectButtonSwitch: SwitchInfo = { number: 104, name: 'Select Button' };
 export const inlaneSwitch: SwitchInfo = { number: 6, name: 'Inlane Rollover' };
 export const domSwitch: TargetSwitchInfo = {
 	number: 7,
