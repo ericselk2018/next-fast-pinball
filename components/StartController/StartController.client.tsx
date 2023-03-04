@@ -46,32 +46,34 @@ const StartController = () => {
 	// Flippers change selected value.
 	useFlippers(
 		(left) => {
-			if (selectingNumberOfPlayers) {
-				setPlayerInitials((playerInitials) => {
-					if (left) {
-						if (playerInitials.length > 1) {
-							return playerInitials.slice(0, -1);
+			if (!gameStarted) {
+				if (selectingNumberOfPlayers) {
+					setPlayerInitials((playerInitials) => {
+						if (left) {
+							if (playerInitials.length > 1) {
+								return playerInitials.slice(0, -1);
+							}
+						} else if (playerInitials.length < maxPlayers) {
+							return [...playerInitials, 'AAA'];
 						}
-					} else if (playerInitials.length < maxPlayers) {
-						return [...playerInitials, 'AAA'];
-					}
-					return playerInitials;
-				});
-			} else {
-				setPlayerInitials((playerInitials) =>
-					replaceItemAtIndex({
-						array: playerInitials,
-						index: selectedPlayerIndex,
-						item: changeLetterAt({
-							text: playerInitials[selectedPlayerIndex],
-							index: selectedInitialIndex,
-							down: left,
-						}),
-					})
-				);
+						return playerInitials;
+					});
+				} else {
+					setPlayerInitials((playerInitials) =>
+						replaceItemAtIndex({
+							array: playerInitials,
+							index: selectedPlayerIndex,
+							item: changeLetterAt({
+								text: playerInitials[selectedPlayerIndex],
+								index: selectedInitialIndex,
+								down: left,
+							}),
+						})
+					);
+				}
 			}
 		},
-		[selectedInitialIndex, selectedPlayerIndex, selectingNumberOfPlayers]
+		[selectedInitialIndex, selectedPlayerIndex, selectingNumberOfPlayers, gameStarted]
 	);
 
 	// Update selection when selected button is pressed.
