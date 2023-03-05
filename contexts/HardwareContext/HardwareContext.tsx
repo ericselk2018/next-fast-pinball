@@ -12,13 +12,7 @@ import TargetSwitch from '../../entities/TargetSwitch';
 import FastWriter from '../../lib/FastWriter/FastWriter';
 import { bitTest } from '../../lib/math/math';
 import { createContext, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import switches, {
-	kickerSwitches,
-	leftFlipperButtonSwitch,
-	leftFlipperEndOfStrokeSwitch,
-	SwitchInfo,
-	TargetSwitchInfo,
-} from '../../const/Switches/Switches';
+import switches, { kickerSwitches, SwitchInfo, TargetSwitchInfo } from '../../const/Switches/Switches';
 
 // These will need to be adjusted if FAST changes these.
 const usbVendorId = 11914;
@@ -116,6 +110,39 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		enableOrDisableFlippers({ enable: false });
 	}, [enableOrDisableFlippers]);
 
+	const configureFlipper = useCallback(
+		async (args: { flipper: FlipperInfo }) => {
+			const { flipper } = args;
+			const { buttonSwitch, endOfStrokeSwitch, holdCoil, mainCoil } = flipper;
+
+			// Configure Main Coil
+			await fastWriter.coil.configureAutoTriggeredDiverter({
+				coilId: mainCoil.id,
+				trigger: { enterSwitchCondition: true, exitSwitchCondition: true },
+				enterSwitchId: buttonSwitch.id,
+				exitSwitchId: endOfStrokeSwitch.id,
+				fullPowerTimeInMilliseconds: 30,
+				partialPowerPercent: 0,
+				partialPowerTimeInDeciseconds: 0,
+				restTimeInMilliseconds: 90,
+			});
+
+			// Configure Hold Coil
+			//  I don't understand why these need to be exactly this way, but most other variations cause coil to buzz.
+			//  I would think kick power and time should be 0, and latch power could be less than 100%, but does not work.
+			await fastWriter.coil.latch({
+				coilId: holdCoil.id,
+				kickPowerPercent: 1,
+				kickTimeInMilliseconds: 10,
+				latchPowerPercent: 1,
+				restTimeInMilliseconds: 90,
+				switchCondition: true,
+				switchId: buttonSwitch.id,
+			});
+		},
+		[fastWriter.coil]
+	);
+
 	const open = useCallback(
 		async (port: SerialPort) => {
 			try {
@@ -168,30 +195,9 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				await fastWriter.configureHardware({ hardwareModel });
 				await fastWriter.getSwitchStates();
 
-				// Configure Left Flipper Main Coil
-				await fastWriter.coil.configureAutoTriggeredDiverter({
-					coilId: leftFlipperMainCoil.id,
-					trigger: { enterSwitchCondition: true, exitSwitchCondition: true },
-					enterSwitchId: leftFlipperButtonSwitch.id,
-					exitSwitchId: leftFlipperEndOfStrokeSwitch.id,
-					fullPowerTimeInMilliseconds: 30,
-					partialPowerPercent: 0,
-					partialPowerTimeInDeciseconds: 0,
-					restTimeInMilliseconds: 90,
-				});
-
-				// Configure Left Flipper Hold Coil
-				//  I don't understand why these need to be exactly this way, but most other variations cause coil to buzz.
-				//  I would think kick power and time should be 0, and latch power could be less than 100%, but does not work.
-				await fastWriter.coil.latch({
-					coilId: leftFlipperHoldCoil.id,
-					kickPowerPercent: 1,
-					kickTimeInMilliseconds: 10,
-					latchPowerPercent: 1,
-					restTimeInMilliseconds: 90,
-					switchCondition: true,
-					switchId: leftFlipperButtonSwitch.id,
-				});
+				for (const flipper of flippers) {
+					await configureFlipper({ flipper });
+				}
 
 				disableFlippers();
 			} catch (reason: unknown) {
@@ -199,7 +205,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				setLastError(reason as Error);
 			}
 		},
-		[fastWriter, notifySwitchHitEventHandlers, switchesOpen, disableFlippers]
+		[fastWriter, disableFlippers, switchesOpen, notifySwitchHitEventHandlers, configureFlipper]
 	);
 
 	// Keep watchdog happy.  FAST uses this to disable things if our app crashes or loses the connection.
