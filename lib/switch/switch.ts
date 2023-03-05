@@ -1,5 +1,5 @@
-import { leftFlipperButtonSwitch, rightFlipperButtonSwitch, SwitchInfo } from '@/const/Switches/Switches';
-import HardwareContext from '@/contexts/HardwareContext/HardwareContext';
+import { leftFlipperButtonSwitch, rightFlipperButtonSwitch, SwitchInfo } from '../../const/Switches/Switches';
+import HardwareContext from '../../contexts/HardwareContext/HardwareContext';
 import { DependencyList, EffectCallback, useContext, useEffect, useRef } from 'react';
 
 const useSwitchesInternal = <T extends SwitchInfo>(

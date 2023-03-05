@@ -1,13 +1,13 @@
-import modes, { ModeInfo, ModeStepInfo } from '@/const/Modes/Modes';
-import { startingBallsPerPlayer, startingScore } from '@/const/Rules/Rules';
-import { kickerSwitches } from '@/const/Switches/Switches';
-import Game from '@/entities/Game';
-import Mode from '@/entities/Mode';
-import ModeStep from '@/entities/ModeStep';
-import Player from '@/entities/Player';
-import Shot from '@/entities/Shot';
-import { filterUndefined, replaceItemAtIndex } from '@/lib/array/array';
-import { useToggleSwitches } from '@/lib/switch/switch';
+import modes, { ModeInfo, ModeStepInfo } from '../../const/Modes/Modes';
+import { startingBallsPerPlayer, startingScore } from '../../const/Rules/Rules';
+import { kickerSwitches } from '../../const/Switches/Switches';
+import Game from '../../entities/Game';
+import Mode from '../../entities/Mode';
+import ModeStep from '../../entities/ModeStep';
+import Player from '../../entities/Player';
+import Shot from '../../entities/Shot';
+import { filterUndefined, replaceItemAtIndex } from '../../lib/array/array';
+import { useToggleSwitches } from '../../lib/switch/switch';
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import HardwareContext from '../HardwareContext/HardwareContext';
 

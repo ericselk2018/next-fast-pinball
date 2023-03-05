@@ -1,4 +1,4 @@
-import { SwitchInfo, TargetSwitchInfo } from '@/const/Switches/Switches';
+import { SwitchInfo, TargetSwitchInfo } from '../const/Switches/Switches';
 import Flipper from './Flipper';
 import Kicker from './Kicker';
 import Light from './Light';

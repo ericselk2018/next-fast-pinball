@@ -1,16 +1,16 @@
-import { CoilInfo, leftFlipperHoldCoil, leftFlipperMainCoil } from '@/const/Coils/Coils';
-import flippers, { FlipperInfo } from '@/const/Flippers/Flippers';
-import keyBindings from '@/const/KeyBindings/KeyBindings';
-import lights, { LightInfo } from '@/const/Lights/Lights';
-import { useVirtualHardware } from '@/const/Setup/Setup';
-import Flipper from '@/entities/Flipper';
-import Hardware from '@/entities/Hardware';
-import Kicker from '@/entities/Kicker';
-import Light from '@/entities/Light';
-import Switch from '@/entities/Switch';
-import TargetSwitch from '@/entities/TargetSwitch';
-import FastWriter from '@/lib/FastWriter/FastWriter';
-import { bitTest } from '@/lib/math/math';
+import { CoilInfo, leftFlipperHoldCoil, leftFlipperMainCoil } from '../../const/Coils/Coils';
+import flippers, { FlipperInfo } from '../../const/Flippers/Flippers';
+import keyBindings from '../../const/KeyBindings/KeyBindings';
+import lights, { LightInfo } from '../../const/Lights/Lights';
+import { useVirtualHardware } from '../../const/Setup/Setup';
+import Flipper from '../../entities/Flipper';
+import Hardware from '../../entities/Hardware';
+import Kicker from '../../entities/Kicker';
+import Light from '../../entities/Light';
+import Switch from '../../entities/Switch';
+import TargetSwitch from '../../entities/TargetSwitch';
+import FastWriter from '../../lib/FastWriter/FastWriter';
+import { bitTest } from '../../lib/math/math';
 import { createContext, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import switches, {
 	kickerSwitches,

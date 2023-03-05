@@ -1,4 +1,4 @@
-import Mode from '@/entities/Mode';
+import Mode from '../../../entities/Mode';
 import { useEffect, useRef } from 'react';
 import * as S from './ModeSlide.styles';
 

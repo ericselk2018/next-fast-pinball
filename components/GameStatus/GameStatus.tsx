@@ -1,4 +1,4 @@
-import GameContext from '@/contexts/GameContext/GameContext.client';
+import GameContext from '../../contexts/GameContext/GameContext.client';
 import { useContext } from 'react';
 import * as S from './GameStatus.styles';
 

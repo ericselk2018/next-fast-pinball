@@ -1,4 +1,4 @@
-import { NodeBoard, nodeBoards } from '@/const/NodeBoards/NodeBoards';
+import { NodeBoard, nodeBoards } from '../../const/NodeBoards/NodeBoards';
 
 export const switchId = (args: { board: NodeBoard; header: number; pin: number }) => {
 	const { board, header, pin } = args;

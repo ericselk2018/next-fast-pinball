@@ -1,4 +1,4 @@
-import { switchId } from '@/lib/id/id';
+import { switchId } from '../../lib/id/id';
 import { lowerThirdNodeBoard } from '../NodeBoards/NodeBoards';
 
 export interface SwitchInfo {

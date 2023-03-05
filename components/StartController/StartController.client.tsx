@@ -1,16 +1,16 @@
-import { GameContextProvider } from '@/contexts/GameContext/GameContext.client';
-import { selectButtonSwitch, startButtonSwitch } from '@/const/Switches/Switches';
+import { GameContextProvider } from '../../contexts/GameContext/GameContext.client';
+import { selectButtonSwitch, startButtonSwitch } from '../../const/Switches/Switches';
 import { useContext, useState } from 'react';
 import GameController from '../GameController/GameController.client';
-import MachineContext from '@/contexts/MachineContext/MachineContext';
-import { maxPlayers } from '@/const/Constraints/Constraints';
+import MachineContext from '../../contexts/MachineContext/MachineContext';
+import { maxPlayers } from '../../const/Constraints/Constraints';
 import AttractSlide from '../Slides/AttractSlide/AttractSlide.client';
-import { creditsPerPlayer } from '@/const/Money/Money';
-import { autoStartGamePlayers } from '@/const/Setup/Setup';
-import AudioContext from '@/contexts/AudioContext/AudioContext.client';
-import { useFlippers, useSwitch } from '@/lib/switch/switch';
-import { replaceItemAtIndex } from '@/lib/array/array';
-import { changeLetterAt } from '@/lib/string/string';
+import { creditsPerPlayer } from '../../const/Money/Money';
+import { autoStartGamePlayers } from '../../const/Setup/Setup';
+import AudioContext from '../../contexts/AudioContext/AudioContext.client';
+import { useFlippers, useSwitch } from '../../lib/switch/switch';
+import { replaceItemAtIndex } from '../../lib/array/array';
+import { changeLetterAt } from '../../lib/string/string';
 
 // This controller handles state and logic for starting a game, including:
 //  Displays slide to attract players.

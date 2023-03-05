@@ -1,5 +1,5 @@
-import Blink from '@/components/Blink/Blink.client';
-import MachineContext from '@/contexts/MachineContext/MachineContext';
+import Blink from '../../../components/Blink/Blink.client';
+import MachineContext from '../../../contexts/MachineContext/MachineContext';
 import { useContext } from 'react';
 import * as S from './AttractSlide.styles';
 

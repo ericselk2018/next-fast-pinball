@@ -1,5 +1,5 @@
-import { coinSlotSwitch } from '@/const/Switches/Switches';
-import Machine from '@/entities/Machine';
+import { coinSlotSwitch } from '../../const/Switches/Switches';
+import Machine from '../../entities/Machine';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import AudioContext from '../AudioContext/AudioContext.client';
 import HardwareContext from '../HardwareContext/HardwareContext';

@@ -1,4 +1,4 @@
-import { SwitchInfo } from '@/const/Switches/Switches';
+import { SwitchInfo } from '../const/Switches/Switches';
 
 export default interface Switch extends SwitchInfo {
 	readonly name: string;

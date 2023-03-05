@@ -1,6 +1,6 @@
 export interface NodeBoard {
-	switchCount: number;
-	coilCount: number;
+	readonly switchCount: number;
+	readonly coilCount: number;
 }
 
 export const lowerThirdNodeBoard: NodeBoard = {
@@ -8,4 +8,4 @@ export const lowerThirdNodeBoard: NodeBoard = {
 	coilCount: 8,
 };
 
-export const nodeBoards: NodeBoard[] = [lowerThirdNodeBoard];
+export const nodeBoards: ReadonlyArray<NodeBoard> = [lowerThirdNodeBoard];

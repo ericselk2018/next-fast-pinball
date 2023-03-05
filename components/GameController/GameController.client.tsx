@@ -1,8 +1,8 @@
-import { inlaneSwitch } from '@/const/Switches/Switches';
-import GameContext from '@/contexts/GameContext/GameContext.client';
-import HardwareContext from '@/contexts/HardwareContext/HardwareContext';
-import TargetSwitch from '@/entities/TargetSwitch';
-import { useFlippers, useSwitch, useSwitches } from '@/lib/switch/switch';
+import { inlaneSwitch } from '../../const/Switches/Switches';
+import GameContext from '../../contexts/GameContext/GameContext.client';
+import HardwareContext from '../../contexts/HardwareContext/HardwareContext';
+import TargetSwitch from '../../entities/TargetSwitch';
+import { useFlippers, useSwitch, useSwitches } from '../../lib/switch/switch';
 import { useContext, useEffect } from 'react';
 import GameStatus from '../GameStatus/GameStatus';
 import ModeSlide from '../Slides/ModeSlide/ModeSlide.client';

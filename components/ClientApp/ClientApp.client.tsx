@@ -1,7 +1,7 @@
 'use client';
-import { AudioContextProvider } from '@/contexts/AudioContext/AudioContext.client';
-import { HardwareContextProvider } from '@/contexts/HardwareContext/HardwareContext';
-import { MachineContextProvider } from '@/contexts/MachineContext/MachineContext';
+import { AudioContextProvider } from '../../contexts/AudioContext/AudioContext.client';
+import { HardwareContextProvider } from '../../contexts/HardwareContext/HardwareContext';
+import { MachineContextProvider } from '../../contexts/MachineContext/MachineContext';
 import StartController from '../StartController/StartController.client';
 
 // Entry component for our one and only game "page".

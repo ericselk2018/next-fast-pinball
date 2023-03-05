@@ -1,4 +1,4 @@
-import { TargetSwitchInfo } from '@/const/Switches/Switches';
+import { TargetSwitchInfo } from '../const/Switches/Switches';
 import Switch from './Switch';
 
 export default interface TargetSwitch extends Switch, TargetSwitchInfo {

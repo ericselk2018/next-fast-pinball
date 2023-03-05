@@ -1,4 +1,4 @@
-import audioFiles, { AudioNames } from '@/const/AudioFiles/AudioFiles';
+import audioFiles, { AudioNames } from '../../const/AudioFiles/AudioFiles';
 import { createContext, ReactNode, useCallback, useMemo } from 'react';
 
 interface AudioContext {
