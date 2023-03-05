@@ -7,7 +7,7 @@ describe('Switches', () => {
 			expect(switches).toContain(leftFlipperButtonSwitch);
 		});
 		it('should not contain duplicate numbers', () => {
-			const withoutDuplicates = removeDuplicates({ array: switches, isSame: (a, b) => a.number === b.number });
+			const withoutDuplicates = removeDuplicates({ array: switches, isSame: (a, b) => a.id === b.id });
 			expect(withoutDuplicates).toEqual(switches);
 		});
 	});

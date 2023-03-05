@@ -38,9 +38,9 @@ const ModeSlide = (props: Props) => {
 									<S.StepName>{name}</S.StepName>
 									<S.StepImages>
 										{switches.map((aSwitch, index) => {
-											const { image, number } = aSwitch;
+											const { image, id } = aSwitch;
 											const complete = completedSwitches.some(
-												(completedSwitch) => completedSwitch.number === number
+												(completedSwitch) => completedSwitch.id === id
 											);
 											return (
 												<S.StepImage key={index} complete={complete}>

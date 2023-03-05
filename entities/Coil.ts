@@ -1,4 +1,6 @@
-export default interface Coil {
+import { CoilInfo } from '@/const/Coils/Coils';
+
+export default interface Coil extends CoilInfo {
 	readonly name: string;
-	readonly number: number;
+	readonly id: number;
 }

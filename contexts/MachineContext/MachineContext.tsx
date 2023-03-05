@@ -12,7 +12,7 @@ export const MachineContextProvider = ({ children }: { children: ReactNode }) =>
 	const hardware = useContext(HardwareContext);
 	const audio = useContext(AudioContext);
 	const [credits, setCredits] = useState(0);
-	const coinSlot = hardware.switches.find((aSwitch) => aSwitch.number === coinSlotSwitch.number);
+	const coinSlot = hardware.switches.find((aSwitch) => aSwitch.id === coinSlotSwitch.id);
 
 	useEffect(() => {
 		if (coinSlot) {

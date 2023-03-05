@@ -1,7 +1,7 @@
 import Mode from './Mode';
 
 export default interface Player {
-	readonly number: number;
+	readonly id: number;
 	score: number;
 	totalBalls: number;
 	usedBalls: number;

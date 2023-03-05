@@ -13,7 +13,7 @@ import HardwareContext from '../HardwareContext/HardwareContext';
 
 interface CompletedTask {
 	step: string;
-	switch: number;
+	switchId: number;
 }
 
 // non-null assertion is to keep consumer code cleaner, if we try to use this context in a component
@@ -39,7 +39,7 @@ export const GameContextProvider = ({
 	const [shots, setShots] = useState<Shot[]>([]);
 	const [videoPlaying, setVideoPlaying] = useState('');
 	const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-	const [saucerHolesWithBallsSwitchNumbers, setSaucerHolesWithBallsSwitchNumbers] = useState<number[]>([]);
+	const [saucerHolesWithBallsSwitchIds, setSaucerHolesWithBallsSwitchIds] = useState<number[]>([]);
 	const [ballsInPlay, setBallsInPlay] = useState(0);
 
 	const modeStepInfoToModeStep = useCallback(
@@ -51,21 +51,21 @@ export const GameContextProvider = ({
 				switches: switches.map(targetSwitchInfoToTargetSwitch),
 				completedSwitches: switches
 					.filter((aSwitch) =>
-						tasksCompleted.some((task) => task.step === modeStepInfo.name && task.switch === aSwitch.number)
+						tasksCompleted.some((task) => task.step === modeStepInfo.name && task.switchId === aSwitch.id)
 					)
 					.map(targetSwitchInfoToTargetSwitch),
 				incompleteSwitches: switches
 					.filter(
 						(aSwitch) =>
 							!tasksCompleted.some(
-								(task) => task.step === modeStepInfo.name && task.switch === aSwitch.number
+								(task) => task.step === modeStepInfo.name && task.switchId === aSwitch.id
 							)
 					)
 					.map(targetSwitchInfoToTargetSwitch),
 				completeSwitch: (args) =>
 					setTasksCompleted((tasksCompleted) => [
 						...tasksCompleted,
-						{ step: modeStepInfo.name, switch: args.switch.number },
+						{ step: modeStepInfo.name, switchId: args.switch.id },
 					]),
 			};
 		},
@@ -89,7 +89,7 @@ export const GameContextProvider = ({
 
 	const players: Player[] = playerInitials.map(
 		(initials, index): Player => ({
-			number: index + 1,
+			id: index + 1,
 			initials,
 			get totalBalls() {
 				return totalBalls[index];
@@ -137,11 +137,11 @@ export const GameContextProvider = ({
 
 	const saucerHolesWithBalls = useMemo(() => {
 		return filterUndefined(
-			saucerHolesWithBallsSwitchNumbers.map((saucerHolesWithBallsSwitchNumber) =>
-				kickerSwitches.find((kickerSwitch) => kickerSwitch.number === saucerHolesWithBallsSwitchNumber)
+			saucerHolesWithBallsSwitchIds.map((saucerHolesWithBallsSwitchId) =>
+				kickerSwitches.find((kickerSwitch) => kickerSwitch.id === saucerHolesWithBallsSwitchId)
 			)
 		).map(targetSwitchInfoToTargetSwitch);
-	}, [saucerHolesWithBallsSwitchNumbers, targetSwitchInfoToTargetSwitch]);
+	}, [saucerHolesWithBallsSwitchIds, targetSwitchInfoToTargetSwitch]);
 
 	const context: Game = useMemo(
 		() => ({
@@ -193,15 +193,15 @@ export const GameContextProvider = ({
 	// Keep track of balls in holes.
 	useToggleSwitches(
 		({ closed, switchInfo }) => {
-			const { number } = switchInfo;
-			setSaucerHolesWithBallsSwitchNumbers((saucerHolesWithBalls) => {
+			const { id } = switchInfo;
+			setSaucerHolesWithBallsSwitchIds((saucerHolesWithBalls) => {
 				if (closed) {
-					if (saucerHolesWithBalls.includes(number)) {
+					if (saucerHolesWithBalls.includes(id)) {
 						return saucerHolesWithBalls;
 					}
-					return [...saucerHolesWithBalls, number];
+					return [...saucerHolesWithBalls, id];
 				} else {
-					return saucerHolesWithBalls.filter((n) => n !== number);
+					return saucerHolesWithBalls.filter((n) => n !== id);
 				}
 			});
 		},

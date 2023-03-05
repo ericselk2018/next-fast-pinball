@@ -26,7 +26,7 @@ const usbProductId = 4155;
 const hardwareModel = 8192;
 
 interface SwitchHitEventHandler {
-	switchNumbers: number[];
+	switchIds: number[];
 	onHit?: (switchInfo: SwitchInfo) => void;
 	onToggle?: (args: { switchInfo: SwitchInfo; closed: boolean }) => void;
 }
@@ -42,7 +42,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const [usingVirtualHardware, setUsingVirtualHardware] = useState(useVirtualHardware);
 	const [bootDone, setBootDone] = useState(usingVirtualHardware);
 	const [switchesOpen, setSwitchesOpen] = useState(
-		Array<boolean>(Math.max(...switches.map((aSwitch) => aSwitch.number))).fill(false)
+		Array<boolean>(Math.max(...switches.map((aSwitch) => aSwitch.id))).fill(false)
 	);
 	const switchHitEventHandlers = useRef<SwitchHitEventHandler[]>([]);
 	const portWriter = useRef<WritableStreamDefaultWriter>();
@@ -71,10 +71,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 
 	const notifySwitchHitEventHandlers = useCallback((args: { switchInfo: SwitchInfo; closed: boolean }) => {
 		const { switchInfo, closed } = args;
-		const { number, normallyClosed } = switchInfo;
+		const { id, normallyClosed } = switchInfo;
 		switchHitEventHandlers.current.forEach((handler) =>
-			handler.switchNumbers
-				.filter((n) => n === number)
+			handler.switchIds
+				.filter((n) => n === id)
 				.forEach(() => {
 					if (!!normallyClosed !== closed) {
 						handler.onHit?.(switchInfo);
@@ -88,7 +88,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		(args: { enable: boolean; coil: CoilInfo }) => {
 			const { enable, coil } = args;
 			(async () => {
-				await fastWriter.driver.modifyTrigger({ driverId: coil.number, control: enable ? 'on' : 'off' });
+				await fastWriter.driver.modifyTrigger({ driverId: coil.id, control: enable ? 'on' : 'off' });
 			})();
 		},
 		[fastWriter.driver]
@@ -126,26 +126,24 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 								} else {
 									if (line.startsWith('SA:0E,')) {
 										const switchData = line.substring('SA:0E,'.length);
-										const getOpen = (number: number) => {
-											const byteIndex = number / 8;
+										const getOpen = (id: number) => {
+											const byteIndex = id / 8;
 											const byteValue = parseInt(
 												switchData.substring(byteIndex * 2, byteIndex * 2 + 1),
 												16
 											);
-											return bitTest(byteValue, number % 8);
+											return bitTest(byteValue, id % 8);
 										};
-										setSwitchesOpen(switchesOpen.map((_, number) => getOpen(number)));
+										setSwitchesOpen(switchesOpen.map((_, id) => getOpen(id)));
 									} else if (line.startsWith('/L:') || line.startsWith('-L:')) {
 										const isOpenNow = line[0] === '/';
-										const switchChangedNumber = parseInt(line.substring('/L:'.length), 16);
+										const switchChangedId = parseInt(line.substring('/L:'.length), 16);
 										setSwitchesOpen((switchesOpen) =>
-											switchesOpen.map((wasOpen, switchNumber) =>
-												switchNumber === switchChangedNumber ? isOpenNow : wasOpen
+											switchesOpen.map((wasOpen, switchId) =>
+												switchId === switchChangedId ? isOpenNow : wasOpen
 											)
 										);
-										const switchInfo = switches.find(
-											(aSwitch) => aSwitch.number === switchChangedNumber
-										);
+										const switchInfo = switches.find((aSwitch) => aSwitch.id === switchChangedId);
 										if (switchInfo) {
 											notifySwitchHitEventHandlers({ switchInfo, closed: !isOpenNow });
 										}
@@ -163,10 +161,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 
 				// Configure Left Flipper Main Coil
 				await fastWriter.driver.configureAutoTriggeredDiverter({
-					driverId: leftFlipperMainCoil.number,
+					driverId: leftFlipperMainCoil.id,
 					trigger: { enterSwitchCondition: true, exitSwitchCondition: true },
-					enterSwitchId: leftFlipperButtonSwitch.number,
-					exitSwitchId: leftFlipperEndOfStrokeSwitch.number,
+					enterSwitchId: leftFlipperButtonSwitch.id,
+					exitSwitchId: leftFlipperEndOfStrokeSwitch.id,
 					fullPowerTimeInMilliseconds: 30,
 					partialPowerPercent: 0,
 					partialPowerTimeInDeciseconds: 0,
@@ -175,13 +173,13 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 
 				// Configure Left Flipper Hold Coil
 				await fastWriter.driver.latch({
-					driverId: leftFlipperHoldCoil.number,
+					driverId: leftFlipperHoldCoil.id,
 					kickPowerPercent: 0,
 					kickTimeInMilliseconds: 0,
 					latchPowerPercent: 1,
 					restTimeInMilliseconds: 90,
 					switchCondition: true,
-					switchId: leftFlipperButtonSwitch.number,
+					switchId: leftFlipperButtonSwitch.id,
 				});
 
 				disableFlippers();
@@ -255,7 +253,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					const { switch: switchInfo } = keyBinding;
 					event.preventDefault();
 					setSwitchesOpen((switchesOpen) =>
-						switchesOpen.map((open, number) => (number === switchInfo.number ? !down : open))
+						switchesOpen.map((open, id) => (id === switchInfo.id ? !down : open))
 					);
 
 					notifySwitchHitEventHandlers({ switchInfo, closed: down });
@@ -278,25 +276,25 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 
 	const switchInfoToSwitch = useCallback(
 		(switchInfo: SwitchInfo): Switch => {
-			const { name, number } = switchInfo;
+			const { name, id } = switchInfo;
 			return {
 				addHitHandler: (args) => {
 					const { onHit } = args;
 					return addSwitchHitEventHandler({
-						switchNumbers: [number],
+						switchIds: [id],
 						onHit,
 					});
 				},
 				addToggleHandler: (args) => {
 					const { onToggle } = args;
 					return addSwitchHitEventHandler({
-						switchNumbers: [number],
+						switchIds: [id],
 						onToggle,
 					});
 				},
 				name,
-				number,
-				open: switchesOpen[number],
+				id: id,
+				open: switchesOpen[id],
 			};
 		},
 		[addSwitchHitEventHandler, switchesOpen]
@@ -329,10 +327,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	);
 
 	const lightInfoToLight = useCallback((lightInfo: LightInfo): Light => {
-		const { name, number } = lightInfo;
+		const { name, id } = lightInfo;
 		return {
 			name,
-			number,
+			id,
 		};
 	}, []);
 
@@ -344,7 +342,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		}) => {
 			const { switches, onHit, onToggle } = args;
 			return addSwitchHitEventHandler({
-				switchNumbers: switches.map((switchInfo) => switchInfo.number),
+				switchIds: switches.map((switchInfo) => switchInfo.id),
 				onHit,
 				onToggle,
 			});

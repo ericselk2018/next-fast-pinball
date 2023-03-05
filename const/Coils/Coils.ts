@@ -1,10 +1,10 @@
 export interface CoilInfo {
 	name: string;
-	number: number;
+	id: number;
 }
 
-export const leftFlipperMainCoil: CoilInfo = { name: 'Left Flipper', number: 0 };
-export const leftFlipperHoldCoil: CoilInfo = { name: 'Left Flipper Hold', number: 1 };
+export const leftFlipperMainCoil: CoilInfo = { name: 'Left Flipper', id: 0 };
+export const leftFlipperHoldCoil: CoilInfo = { name: 'Left Flipper Hold', id: 1 };
 
 const coils: CoilInfo[] = [];
 

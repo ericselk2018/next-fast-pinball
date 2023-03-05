@@ -58,7 +58,7 @@ Number of balls moving on playfield, just a count.
 
 ### Saucer Hole Balls (Game Context)
 
-Switch number for each saucer hole switch that contains a ball.
+Switch id for each saucer hole switch that contains a ball.
 
 ### Hardware Error (Hardware Context)
 

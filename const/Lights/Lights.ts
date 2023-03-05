@@ -1,6 +1,6 @@
 export interface LightInfo {
 	readonly name: string;
-	readonly number: number;
+	readonly id: number;
 }
 
 const lights: ReadonlyArray<LightInfo> = [];

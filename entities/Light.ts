@@ -1,4 +1,6 @@
-export default interface Light {
+import { LightInfo } from '@/const/Lights/Lights';
+
+export default interface Light extends LightInfo {
 	readonly name: string;
-	readonly number: number;
+	readonly id: number;
 }

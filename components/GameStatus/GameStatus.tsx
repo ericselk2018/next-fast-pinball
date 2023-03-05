@@ -13,7 +13,7 @@ const GameStatus = () => {
 					{players.map((player, index) => {
 						const { score, usedBalls, totalBalls } = player;
 						return (
-							<S.Player key={index} active={player.number === currentPlayer.number}>
+							<S.Player key={index} active={player.id === currentPlayer.id}>
 								<S.Score>{score.toLocaleString()}</S.Score>
 								<S.Balls>
 									<img src="images/ball.png" />
