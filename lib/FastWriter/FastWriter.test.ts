@@ -1,11 +1,11 @@
-import { fast } from './fast';
+import FastWriter from './FastWriter';
 
-describe('fast', () => {
+describe('FastWriter', () => {
 	describe('configureHardware', () => {
 		it('should write correct command', async () => {
 			const write = jest.fn();
 			const hardwareModel = 1234;
-			await fast({ write }).configureHardware({ hardwareModel });
+			await FastWriter({ write }).configureHardware({ hardwareModel });
 			expect(write).toBeCalledTimes(1);
 			expect(write).toBeCalledWith(`CH:${hardwareModel.toString(16)},1\r`);
 		});
@@ -13,7 +13,7 @@ describe('fast', () => {
 	describe('getSwitchStates', () => {
 		it('should write correct command', async () => {
 			const write = jest.fn();
-			await fast({ write }).getSwitchStates();
+			await FastWriter({ write }).getSwitchStates();
 			expect(write).toBeCalledTimes(1);
 			expect(write).toBeCalledWith(`SA:\r`);
 		});
@@ -22,12 +22,12 @@ describe('fast', () => {
 		it('should write correct command', async () => {
 			const write = jest.fn();
 			const timeoutInMilliseconds = 1234;
-			await fast({ write }).setWatchdog({ timeoutInMilliseconds });
+			await FastWriter({ write }).setWatchdog({ timeoutInMilliseconds });
 			expect(write).toBeCalledTimes(1);
 			expect(write).toBeCalledWith(`WD:${timeoutInMilliseconds.toString(16)}\r`);
 		});
 	});
-	describe('driver', () => {
+	describe('coil', () => {
 		describe('configureAutoTriggeredDiverter', () => {
 			it('should write correct command', async () => {
 				const write = jest.fn();
@@ -40,11 +40,11 @@ describe('fast', () => {
 				const restTimeInMilliseconds = 56;
 				const trigger = { enterSwitchCondition: true, exitSwitchCondition: false };
 				const triggerValue = 0x21;
-				await fast({ write }).driver.configureAutoTriggeredDiverter({
+				await FastWriter({ write }).coil.configureAutoTriggeredDiverter({
 					enterSwitchId: enterSwitch,
 					exitSwitchId: exitSwitch,
 					fullPowerTimeInMilliseconds,
-					driverId: mainCoil,
+					coilId: mainCoil,
 					partialPowerPercent,
 					partialPowerTimeInDeciseconds,
 					restTimeInMilliseconds,

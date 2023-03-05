@@ -132,7 +132,7 @@ Information about audio files.
 
 #### Coils
 
-List of drivers/coils in your game.
+List of coils in your game.
 
 #### Constraints
 
@@ -196,7 +196,7 @@ Contains all of the first class citizens (aka things or nouns) that exist in our
 
 #### Coil
 
-Also known as a driver. Common pinball hardware -- electromagnet.
+Also known as a driver, but in our game driver is a person, so call these coils. Common pinball hardware -- electromagnet.
 
 #### Flipper
 

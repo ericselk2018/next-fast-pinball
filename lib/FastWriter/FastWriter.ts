@@ -1,7 +1,7 @@
 import { filterUndefined } from '../array/array';
 import { clamp } from '../math/math';
 
-export const fast = (args: { write: (text: string) => Promise<void> }) => {
+const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 	const { write } = args;
 
 	const toHex = (number: number) => number.toString(16);
@@ -36,9 +36,9 @@ export const fast = (args: { write: (text: string) => Promise<void> }) => {
 		await writeCommand('WD', timeoutInMilliseconds);
 	};
 
-	const driver = (() => {
+	const coil = (() => {
 		const configureAutoTriggeredDiverter = async (args: {
-			driverId: number;
+			coilId: number;
 			enterSwitchId: number;
 			exitSwitchId: number;
 			trigger: { enterSwitchCondition: boolean; exitSwitchCondition: boolean };
@@ -48,7 +48,7 @@ export const fast = (args: { write: (text: string) => Promise<void> }) => {
 			restTimeInMilliseconds: number;
 		}) => {
 			const {
-				driverId,
+				coilId,
 				enterSwitchId,
 				exitSwitchId,
 				trigger,
@@ -69,13 +69,13 @@ export const fast = (args: { write: (text: string) => Promise<void> }) => {
 					  0x31;
 			const partialPowerValue = clamp({ value: partialPowerPercent, min: 0, max: 1 }) * 255;
 
-			const driverMode = 0x75;
+			const coilMode = 0x75;
 			await writeCommand(
 				'DL',
-				driverId,
+				coilId,
 				triggerValue,
 				enterSwitchId,
-				driverMode,
+				coilMode,
 				exitSwitchId,
 				fullPowerTimeInMilliseconds,
 				partialPowerTimeInDeciseconds,
@@ -85,7 +85,7 @@ export const fast = (args: { write: (text: string) => Promise<void> }) => {
 		};
 
 		const latch = async (args: {
-			driverId: number;
+			coilId: number;
 			switchCondition: boolean;
 			switchId: number;
 			kickTimeInMilliseconds: number;
@@ -94,7 +94,7 @@ export const fast = (args: { write: (text: string) => Promise<void> }) => {
 			restTimeInMilliseconds: number;
 		}) => {
 			const {
-				driverId,
+				coilId,
 				kickPowerPercent,
 				kickTimeInMilliseconds,
 				latchPowerPercent,
@@ -103,13 +103,13 @@ export const fast = (args: { write: (text: string) => Promise<void> }) => {
 				restTimeInMilliseconds,
 			} = args;
 			const triggerValue = switchCondition ? 0x01 : 0x11;
-			const driverMode = 0x18;
+			const coilMode = 0x18;
 			await writeCommand(
 				'DL',
-				driverId,
+				coilId,
 				triggerValue,
 				switchId,
-				driverMode,
+				coilMode,
 				kickTimeInMilliseconds,
 				kickPowerPercent,
 				latchPowerPercent,
@@ -118,13 +118,13 @@ export const fast = (args: { write: (text: string) => Promise<void> }) => {
 		};
 
 		const modifyTrigger = async (args: {
-			driverId: number;
+			coilId: number;
 			control: 'auto' | 'tap' | 'off' | 'on';
 			switchId?: number;
 		}) => {
-			const { driverId, control, switchId } = args;
+			const { coilId, control, switchId } = args;
 			const controlValue = control === 'auto' ? 0 : control === 'tap' ? 1 : control === 'off' ? 2 : /*on*/ 3;
-			await writeCommand('TL', driverId, controlValue, switchId);
+			await writeCommand('TL', coilId, controlValue, switchId);
 		};
 
 		return {
@@ -139,6 +139,8 @@ export const fast = (args: { write: (text: string) => Promise<void> }) => {
 		configureHardware,
 		getSwitchStates,
 		setWatchdog,
-		driver,
+		coil,
 	};
 };
+
+export default FastWriter;

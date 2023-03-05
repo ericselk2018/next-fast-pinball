@@ -9,7 +9,7 @@ import Kicker from '@/entities/Kicker';
 import Light from '@/entities/Light';
 import Switch from '@/entities/Switch';
 import TargetSwitch from '@/entities/TargetSwitch';
-import { fast } from '@/lib/fast/fast';
+import FastWriter from '@/lib/FastWriter/FastWriter';
 import { bitTest } from '@/lib/math/math';
 import { createContext, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import switches, {
@@ -49,7 +49,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const opening = useRef(false);
 
 	const fastWriter = useMemo(() => {
-		return fast({
+		return FastWriter({
 			write: async (text) => {
 				const writer = portWriter.current;
 				if (writer) {
@@ -88,10 +88,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		(args: { enable: boolean; coil: CoilInfo }) => {
 			const { enable, coil } = args;
 			(async () => {
-				await fastWriter.driver.modifyTrigger({ driverId: coil.id, control: enable ? 'on' : 'off' });
+				await fastWriter.coil.modifyTrigger({ coilId: coil.id, control: enable ? 'on' : 'off' });
 			})();
 		},
-		[fastWriter.driver]
+		[fastWriter.coil]
 	);
 
 	const enableOrDisableFlippers = useCallback(
@@ -160,8 +160,8 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				await fastWriter.getSwitchStates();
 
 				// Configure Left Flipper Main Coil
-				await fastWriter.driver.configureAutoTriggeredDiverter({
-					driverId: leftFlipperMainCoil.id,
+				await fastWriter.coil.configureAutoTriggeredDiverter({
+					coilId: leftFlipperMainCoil.id,
 					trigger: { enterSwitchCondition: true, exitSwitchCondition: true },
 					enterSwitchId: leftFlipperButtonSwitch.id,
 					exitSwitchId: leftFlipperEndOfStrokeSwitch.id,
@@ -172,8 +172,8 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				});
 
 				// Configure Left Flipper Hold Coil
-				await fastWriter.driver.latch({
-					driverId: leftFlipperHoldCoil.id,
+				await fastWriter.coil.latch({
+					coilId: leftFlipperHoldCoil.id,
 					kickPowerPercent: 0,
 					kickTimeInMilliseconds: 0,
 					latchPowerPercent: 1,
