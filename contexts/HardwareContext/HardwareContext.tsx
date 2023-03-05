@@ -9,14 +9,21 @@ import Kicker from '@/entities/Kicker';
 import Light from '@/entities/Light';
 import Switch from '@/entities/Switch';
 import TargetSwitch from '@/entities/TargetSwitch';
+import { fast } from '@/lib/fast/fast';
 import { bitTest } from '@/lib/math/math';
 import { createContext, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import switches, { kickerSwitches, SwitchInfo, TargetSwitchInfo } from '../../const/Switches/Switches';
+import switches, {
+	kickerSwitches,
+	leftFlipperButtonSwitch,
+	leftFlipperEndOfStrokeSwitch,
+	SwitchInfo,
+	TargetSwitchInfo,
+} from '../../const/Switches/Switches';
 
 // These will need to be adjusted if FAST changes these.
 const usbVendorId = 11914;
 const usbProductId = 4155;
-const hardwareModel = 2000;
+const hardwareModel = 8192;
 
 interface SwitchHitEventHandler {
 	switchNumbers: number[];
@@ -39,6 +46,18 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	);
 	const switchHitEventHandlers = useRef<SwitchHitEventHandler[]>([]);
 	const portWriter = useRef<WritableStreamDefaultWriter>();
+	const opening = useRef(false);
+
+	const fastWriter = useMemo(() => {
+		return fast({
+			write: async (text) => {
+				const writer = portWriter.current;
+				if (writer) {
+					await writer.write(new TextEncoder().encode(text));
+				}
+			},
+		});
+	}, []);
 
 	const addSwitchHitEventHandler = useCallback((handler: SwitchHitEventHandler) => {
 		switchHitEventHandlers.current.push(handler);
@@ -65,18 +84,38 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		);
 	}, []);
 
-	const writeLine = useCallback(async (text: string) => {
-		const writer = portWriter.current;
-		if (writer) {
-			await writer.write(new TextEncoder().encode(text + '\r'));
-		}
-	}, []);
+	const enableOrDisableCoil = useCallback(
+		(args: { enable: boolean; coil: CoilInfo }) => {
+			const { enable, coil } = args;
+			(async () => {
+				await fastWriter.driver.modifyTrigger({ driverId: coil.number, control: enable ? 'on' : 'off' });
+			})();
+		},
+		[fastWriter.driver]
+	);
+
+	const enableOrDisableFlippers = useCallback(
+		(args: { enable: boolean }) => {
+			const { enable } = args;
+			enableOrDisableCoil({ enable, coil: leftFlipperMainCoil });
+			enableOrDisableCoil({ enable, coil: leftFlipperHoldCoil });
+		},
+		[enableOrDisableCoil]
+	);
+
+	const enableFlippers = useCallback(() => {
+		enableOrDisableFlippers({ enable: true });
+	}, [enableOrDisableFlippers]);
+
+	const disableFlippers = useCallback(() => {
+		enableOrDisableFlippers({ enable: false });
+	}, [enableOrDisableFlippers]);
 
 	const open = useCallback(
 		async (port: SerialPort) => {
 			try {
 				await port.open({ baudRate: 921600 });
-				await port.readable.pipeTo(
+				port.readable.pipeTo(
 					new WritableStream({
 						write: (chunk: Uint8Array) => {
 							const lines = (received.current + new TextDecoder().decode(chunk)).split('\r');
@@ -118,19 +157,59 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				);
 				const writer = port.writable.getWriter();
 				portWriter.current = writer;
-				await writeLine('ID:');
-				await writeLine(`CH:${hardwareModel},1`);
-				await writeLine('SA:');
+				await fastWriter.clear();
+				await fastWriter.configureHardware({ hardwareModel });
+				await fastWriter.getSwitchStates();
+
+				// Configure Left Flipper Main Coil
+				await fastWriter.driver.configureAutoTriggeredDiverter({
+					driverId: leftFlipperMainCoil.number,
+					trigger: { enterSwitchCondition: true, exitSwitchCondition: true },
+					enterSwitchId: leftFlipperButtonSwitch.number,
+					exitSwitchId: leftFlipperEndOfStrokeSwitch.number,
+					fullPowerTimeInMilliseconds: 30,
+					partialPowerPercent: 0,
+					partialPowerTimeInDeciseconds: 0,
+					restTimeInMilliseconds: 90,
+				});
+
+				// Configure Left Flipper Hold Coil
+				await fastWriter.driver.latch({
+					driverId: leftFlipperHoldCoil.number,
+					kickPowerPercent: 0,
+					kickTimeInMilliseconds: 0,
+					latchPowerPercent: 1,
+					restTimeInMilliseconds: 90,
+					switchCondition: true,
+					switchId: leftFlipperButtonSwitch.number,
+				});
+
+				disableFlippers();
 			} catch (reason: unknown) {
 				// dangerous as cast, need to read more about TypeScript specific exception handling
 				setLastError(reason as Error);
 			}
 		},
-		[notifySwitchHitEventHandlers, switchesOpen, writeLine]
+		[fastWriter, notifySwitchHitEventHandlers, switchesOpen, disableFlippers]
 	);
 
+	// Keep watchdog happy.  FAST uses this to disable things if our app crashes or loses the connection.
+	//  We ping it every 500ms and tell it to shutdown if we don't ping again within 1000ms.
 	useEffect(() => {
-		if (!lastError && !usingVirtualHardware) {
+		if (!usingVirtualHardware && !lastError && bootDone && !permissionRequired) {
+			const updateWatchdog = () => {
+				fastWriter.setWatchdog({ timeoutInMilliseconds: 1000 });
+			};
+			const interval = setInterval(updateWatchdog, 500);
+			updateWatchdog();
+			return () => clearInterval(interval);
+		}
+	}, [bootDone, fastWriter, lastError, permissionRequired, usingVirtualHardware]);
+
+	// Attempt to open port if not in error state, not already open, and not using virtual hardware.
+	useEffect(() => {
+		if (!lastError && !usingVirtualHardware && !opening.current) {
+			opening.current = true;
 			navigator.serial
 				.getPorts()
 				.then((ports) => {
@@ -139,6 +218,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					} else {
 						ports.forEach((port) => port.forget());
 						setPermissionRequired(true);
+						opening.current = false;
 					}
 				})
 				.catch((reason) => {
@@ -150,8 +230,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		}
 	}, [lastError, open, usingVirtualHardware]);
 
+	// Handle retry after error.  Just waits 3 seconds and then tries again.
 	useEffect(() => {
 		if (lastError) {
+			opening.current = false;
 			const timeout = setTimeout(() => {
 				setLastError(undefined);
 			}, 3000);
@@ -159,9 +241,11 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		}
 	}, [lastError]);
 
+	// Watch keyboard events while using virtual hardware.
 	useEffect(() => {
 		if (usingVirtualHardware) {
-			const handleKeyDown = (event: KeyboardEvent) => {
+			const handleKeyUpOrDown = (args: { event: KeyboardEvent; down: boolean }) => {
+				const { event, down } = args;
 				const keyBinding = keyBindings.find(
 					(keyBinding) =>
 						keyBinding.key === event.key &&
@@ -171,39 +255,26 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					const { switch: switchInfo } = keyBinding;
 					event.preventDefault();
 					setSwitchesOpen((switchesOpen) =>
-						switchesOpen.map((open, number) => (number === switchInfo.number ? false : open))
+						switchesOpen.map((open, number) => (number === switchInfo.number ? !down : open))
 					);
 
-					notifySwitchHitEventHandlers({ switchInfo, closed: true });
+					notifySwitchHitEventHandlers({ switchInfo, closed: down });
 				}
+			};
+			const handleKeyDown = (event: KeyboardEvent) => {
+				handleKeyUpOrDown({ event, down: true });
+			};
+			const handleKeyUp = (event: KeyboardEvent) => {
+				handleKeyUpOrDown({ event, down: false });
 			};
 			document.addEventListener('keydown', handleKeyDown);
-			return () => document.removeEventListener('keydown', handleKeyDown);
+			document.addEventListener('keyup', handleKeyUp);
+			return () => {
+				document.removeEventListener('keydown', handleKeyDown);
+				document.removeEventListener('keyup', handleKeyUp);
+			};
 		}
 	}, [notifySwitchHitEventHandlers, usingVirtualHardware]);
-
-	useEffect(() => {
-		if (usingVirtualHardware) {
-			const handleKeyUp = (event: KeyboardEvent) => {
-				const keyBinding = keyBindings.find(
-					(keyBinding) =>
-						keyBinding.key === event.key &&
-						(keyBinding.location === undefined || keyBinding.location === event.location)
-				);
-				if (keyBinding) {
-					const { switch: switchInfo } = keyBinding;
-					event.preventDefault();
-					setSwitchesOpen((switchesOpen) =>
-						switchesOpen.map((open, number) => (number === switchInfo.number ? true : open))
-					);
-
-					notifySwitchHitEventHandlers({ switchInfo, closed: false });
-				}
-			};
-			document.addEventListener('keyup', handleKeyUp);
-			return () => document.removeEventListener('keyup', handleKeyUp);
-		}
-	}, [usingVirtualHardware, notifySwitchHitEventHandlers]);
 
 	const switchInfoToSwitch = useCallback(
 		(switchInfo: SwitchInfo): Switch => {
@@ -264,34 +335,6 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			number,
 		};
 	}, []);
-
-	const enableOrDisableCoil = useCallback(
-		(args: { enable: boolean; coil: CoilInfo }) => {
-			const { enable } = args;
-			// TODO: figure out how flippers should work once docs are updated
-			if (enable) {
-				writeLine(``);
-			}
-		},
-		[writeLine]
-	);
-
-	const enableOrDisableFlippers = useCallback(
-		(args: { enable: boolean }) => {
-			const { enable } = args;
-			enableOrDisableCoil({ enable, coil: leftFlipperMainCoil });
-			enableOrDisableCoil({ enable, coil: leftFlipperHoldCoil });
-		},
-		[enableOrDisableCoil]
-	);
-
-	const enableFlippers = useCallback(() => {
-		enableOrDisableFlippers({ enable: true });
-	}, [enableOrDisableFlippers]);
-
-	const disableFlippers = useCallback(() => {
-		enableOrDisableFlippers({ enable: false });
-	}, [enableOrDisableFlippers]);
 
 	const addSwitchHandler = useCallback(
 		(args: {

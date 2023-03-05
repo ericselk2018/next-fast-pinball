@@ -8,7 +8,8 @@ export default interface Game {
 	readonly players: ReadonlyArray<Player>;
 	currentPlayer: Player;
 	readonly nextPlayer: Player;
-	ballsInPlay: number;
+	readonly ballsInPlay: number;
+	readonly setBallsInPlay: (setter: (previousValue: number) => number) => void;
 	currentMode: Mode;
 	readonly currentModeStep: ModeStep | undefined;
 	readonly currentModeIndex: number;

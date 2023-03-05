@@ -1,18 +1,17 @@
 import modes, { ModeInfo, ModeStepInfo } from '@/const/Modes/Modes';
 import { startingBallsPerPlayer, startingScore } from '@/const/Rules/Rules';
-import { inlaneSwitch, kickerSwitches } from '@/const/Switches/Switches';
+import { kickerSwitches } from '@/const/Switches/Switches';
 import Game from '@/entities/Game';
 import Mode from '@/entities/Mode';
 import ModeStep from '@/entities/ModeStep';
 import Player from '@/entities/Player';
 import Shot from '@/entities/Shot';
 import { filterUndefined, replaceItemAtIndex } from '@/lib/array/array';
-import { useSwitch, useToggleSwitches } from '@/lib/switch/switch';
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useToggleSwitches } from '@/lib/switch/switch';
+import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import HardwareContext from '../HardwareContext/HardwareContext';
 
 interface CompletedTask {
-	mode: string;
 	step: string;
 	switch: number;
 }
@@ -30,7 +29,7 @@ export const GameContextProvider = ({
 	playerInitials: string[];
 }) => {
 	const hardware = useContext(HardwareContext);
-	const { targetSwitchInfoToTargetSwitch, addSwitchHandler } = hardware;
+	const { targetSwitchInfoToTargetSwitch } = hardware;
 	const [scores, setScores] = useState(Array(playerInitials.length).fill(startingScore));
 	const [totalBalls, setTotalBalls] = useState(Array(playerInitials.length).fill(startingBallsPerPlayer));
 	const [usedBalls, setUsedBalls] = useState(Array(playerInitials.length).fill(0));
@@ -43,36 +42,8 @@ export const GameContextProvider = ({
 	const [saucerHolesWithBallsSwitchNumbers, setSaucerHolesWithBallsSwitchNumbers] = useState<number[]>([]);
 	const [ballsInPlay, setBallsInPlay] = useState(0);
 
-	// TODO: Should useEffect and useSwitch move to GameController?  What goes in controller vs context?
-	// Increase balls in play when inline switch triggers.
-	useSwitch(
-		() => {
-			setBallsInPlay((ballsInPlay) => ballsInPlay + 1);
-		},
-		[],
-		inlaneSwitch
-	);
-
-	useToggleSwitches(
-		({ closed, switchInfo }) => {
-			const { number } = switchInfo;
-			setSaucerHolesWithBallsSwitchNumbers((saucerHolesWithBalls) => {
-				if (closed) {
-					if (saucerHolesWithBalls.includes(number)) {
-						return saucerHolesWithBalls;
-					}
-					return [...saucerHolesWithBalls, number];
-				} else {
-					return saucerHolesWithBalls.filter((n) => n !== number);
-				}
-			});
-		},
-		[],
-		kickerSwitches
-	);
-
 	const modeStepInfoToModeStep = useCallback(
-		(modeStepInfo: ModeStepInfo, modeInfo: ModeInfo): ModeStep => {
+		(modeStepInfo: ModeStepInfo): ModeStep => {
 			const { name, switches, count } = modeStepInfo;
 			return {
 				name,
@@ -80,29 +51,21 @@ export const GameContextProvider = ({
 				switches: switches.map(targetSwitchInfoToTargetSwitch),
 				completedSwitches: switches
 					.filter((aSwitch) =>
-						tasksCompleted.some(
-							(task) =>
-								task.mode === modeInfo.name &&
-								task.step === modeStepInfo.name &&
-								task.switch === aSwitch.number
-						)
+						tasksCompleted.some((task) => task.step === modeStepInfo.name && task.switch === aSwitch.number)
 					)
 					.map(targetSwitchInfoToTargetSwitch),
 				incompleteSwitches: switches
 					.filter(
 						(aSwitch) =>
 							!tasksCompleted.some(
-								(task) =>
-									task.mode === modeInfo.name &&
-									task.step === modeStepInfo.name &&
-									task.switch === aSwitch.number
+								(task) => task.step === modeStepInfo.name && task.switch === aSwitch.number
 							)
 					)
 					.map(targetSwitchInfoToTargetSwitch),
 				completeSwitch: (args) =>
 					setTasksCompleted((tasksCompleted) => [
 						...tasksCompleted,
-						{ mode: modeInfo.name, step: modeStepInfo.name, switch: args.switch.number },
+						{ step: modeStepInfo.name, switch: args.switch.number },
 					]),
 			};
 		},
@@ -115,7 +78,7 @@ export const GameContextProvider = ({
 			return {
 				name,
 				video,
-				steps: steps.map((step) => modeStepInfoToModeStep(step, modeInfo)),
+				steps: steps.map((step) => modeStepInfoToModeStep(step)),
 			};
 		},
 		[modeStepInfoToModeStep]
@@ -180,44 +143,12 @@ export const GameContextProvider = ({
 		).map(targetSwitchInfoToTargetSwitch);
 	}, [saucerHolesWithBallsSwitchNumbers, targetSwitchInfoToTargetSwitch]);
 
-	useEffect(() => {
-		if (!currentModeStep) {
-			// mode complete, you win!
-		}
-	}, [currentModeStep]);
-
-	// When a switch in the current step is hit, mark as complete.
-	useEffect(() => {
-		if (currentModeStep) {
-			const { incompleteSwitches } = currentModeStep;
-			addSwitchHandler({
-				onHit: (aSwitch) => {
-					setTasksCompleted((tasksCompleted) => {
-						const t = tasksCompleted.find((a) => a.switch === aSwitch.number);
-						if (t) {
-							return tasksCompleted;
-						}
-						return [
-							...tasksCompleted,
-							{ mode: currentMode.name, step: currentModeStep.name, switch: aSwitch.number },
-						];
-					});
-				},
-				switches: incompleteSwitches,
-			});
-		}
-	}, [addSwitchHandler, currentMode.name, currentModeStep]);
-
 	const context: Game = useMemo(
 		() => ({
 			saucerHolesWithBalls,
 			modes: modes.map(modeInfoToMode),
-			get ballsInPlay() {
-				return ballsInPlay;
-			},
-			set ballsInPlay(value) {
-				setBallsInPlay(value);
-			},
+			ballsInPlay,
+			setBallsInPlay,
 			currentModeStep,
 			currentModeIndex,
 			get currentMode() {
@@ -257,6 +188,25 @@ export const GameContextProvider = ({
 			videoPlaying,
 			saucerHolesWithBalls,
 		]
+	);
+
+	// Keep track of balls in holes.
+	useToggleSwitches(
+		({ closed, switchInfo }) => {
+			const { number } = switchInfo;
+			setSaucerHolesWithBallsSwitchNumbers((saucerHolesWithBalls) => {
+				if (closed) {
+					if (saucerHolesWithBalls.includes(number)) {
+						return saucerHolesWithBalls;
+					}
+					return [...saucerHolesWithBalls, number];
+				} else {
+					return saucerHolesWithBalls.filter((n) => n !== number);
+				}
+			});
+		},
+		[],
+		kickerSwitches
 	);
 
 	return <GameContext.Provider value={context}>{children}</GameContext.Provider>;
