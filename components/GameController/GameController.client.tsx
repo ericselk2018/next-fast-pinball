@@ -1,4 +1,4 @@
-import { inlaneSwitch } from '../../const/Switches/Switches';
+import { drainSwitch, inlaneSwitch } from '../../const/Switches/Switches';
 import GameContext from '../../contexts/GameContext/GameContext.client';
 import HardwareContext from '../../contexts/HardwareContext/HardwareContext';
 import TargetSwitch from '../../entities/TargetSwitch';
@@ -13,7 +13,7 @@ import * as S from './GameController.styles';
 const GameController = () => {
 	const { enableFlippers, disableFlippers } = useContext(HardwareContext);
 	const game = useContext(GameContext);
-	const { ballsInPlay, setBallsInPlay, modes, currentModeIndex, currentModeStep } = game;
+	const { ballsInPlay, setBallsInPlay, modes, currentModeIndex, currentModeStep, currentPlayer } = game;
 	const incompleteSwitches = currentModeStep?.incompleteSwitches || [];
 
 	// Switch modes using flippers whenever no balls in play.
@@ -48,10 +48,23 @@ const GameController = () => {
 	useSwitch(
 		() => {
 			setBallsInPlay((ballsInPlay) => ballsInPlay + 1);
+			currentPlayer.usedBalls = currentPlayer.usedBalls + 1;
 		},
-		[setBallsInPlay],
+		[currentPlayer, setBallsInPlay],
 		inlaneSwitch
 	);
+
+	// Decrease balls when drain switch is hit.
+	useSwitch(
+		() => {
+			console.log('drain');
+			setBallsInPlay((ballsInPlay) => ballsInPlay - 1);
+		},
+		[setBallsInPlay],
+		drainSwitch
+	);
+
+	console.log({ ballsInPlay });
 
 	// When a switch in the current step is hit, mark as complete.
 	useSwitches(

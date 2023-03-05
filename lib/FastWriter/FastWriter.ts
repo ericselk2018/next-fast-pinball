@@ -4,7 +4,17 @@ import { clamp } from '../math/math';
 const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 	const { write } = args;
 
-	const toHex = (number: number) => number.toString(16);
+	// Zero padding and uppercase doesn't seem to be needed,
+	//  but it makes things match the docs and maybe easier to read in logs.
+	const toHex = (number: number) => {
+		const hex = number.toString(16).toUpperCase();
+		if (hex.length % 2) {
+			return '0' + hex;
+		}
+		return hex;
+	};
+
+	const percentToByteValue = (value: number) => Math.round(clamp({ value, min: 0, max: 1 }) * 255);
 
 	const writeLine = async (args: { text: string }) => {
 		const { text } = args;
@@ -67,7 +77,6 @@ const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 					? 0x21
 					: // !enterSwitchCondition && !exitSwitchCondition
 					  0x31;
-			const partialPowerValue = clamp({ value: partialPowerPercent, min: 0, max: 1 }) * 255;
 
 			const coilMode = 0x75;
 			await writeCommand(
@@ -79,7 +88,7 @@ const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 				exitSwitchId,
 				fullPowerTimeInMilliseconds,
 				partialPowerTimeInDeciseconds,
-				partialPowerValue,
+				percentToByteValue(partialPowerPercent),
 				restTimeInMilliseconds
 			);
 		};
@@ -111,9 +120,10 @@ const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 				switchId,
 				coilMode,
 				kickTimeInMilliseconds,
-				kickPowerPercent,
-				latchPowerPercent,
-				restTimeInMilliseconds
+				percentToByteValue(kickPowerPercent),
+				percentToByteValue(latchPowerPercent),
+				restTimeInMilliseconds,
+				0 // Says <NA> in docs, seems to work fine without sending this also, MPF sends 0 - maybe for legacy Nano reasons
 			);
 		};
 

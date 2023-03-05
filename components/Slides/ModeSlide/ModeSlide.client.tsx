@@ -1,6 +1,8 @@
 import Mode from '../../../entities/Mode';
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import * as S from './ModeSlide.styles';
+import GameContext from 'contexts/GameContext/GameContext.client';
+import Blink from 'components/Blink/Blink.client';
 
 interface Props {
 	active: boolean;
@@ -8,6 +10,7 @@ interface Props {
 }
 
 const ModeSlide = (props: Props) => {
+	const { ballsInPlay } = useContext(GameContext);
 	const { active, mode } = props;
 	const { name, video, steps } = mode;
 	const videoElement = useRef<HTMLVideoElement>(null);
@@ -26,7 +29,9 @@ const ModeSlide = (props: Props) => {
 	return (
 		<S.StyledSlide active={active}>
 			<S.Top>
-				<S.Name>{name}</S.Name>
+				<S.Name>
+					<Blink blinking={!ballsInPlay} text={name} />
+				</S.Name>
 			</S.Top>
 			<S.Bottom>
 				<S.Left>

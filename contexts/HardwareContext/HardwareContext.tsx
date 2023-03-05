@@ -53,6 +53,9 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			write: async (text) => {
 				const writer = portWriter.current;
 				if (writer) {
+					if (!text.startsWith('WD:')) {
+						console.log('write', { text });
+					}
 					await writer.write(new TextEncoder().encode(text));
 				}
 			},
@@ -72,11 +75,13 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const notifySwitchHitEventHandlers = useCallback((args: { switchInfo: SwitchInfo; closed: boolean }) => {
 		const { switchInfo, closed } = args;
 		const { id, normallyClosed } = switchInfo;
+		const hit = !!normallyClosed !== closed;
+		console.log('switch', { name: switchInfo.name, closed, hit });
 		switchHitEventHandlers.current.forEach((handler) =>
 			handler.switchIds
 				.filter((n) => n === id)
 				.forEach(() => {
-					if (!!normallyClosed !== closed) {
+					if (hit) {
 						handler.onHit?.(switchInfo);
 					}
 					handler.onToggle?.({ switchInfo, closed });
@@ -88,7 +93,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		(args: { enable: boolean; coil: CoilInfo }) => {
 			const { enable, coil } = args;
 			(async () => {
-				await fastWriter.coil.modifyTrigger({ coilId: coil.id, control: enable ? 'on' : 'off' });
+				await fastWriter.coil.modifyTrigger({ coilId: coil.id, control: enable ? 'auto' : 'off' });
 			})();
 		},
 		[fastWriter.coil]
@@ -146,6 +151,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 										const switchInfo = switches.find((aSwitch) => aSwitch.id === switchChangedId);
 										if (switchInfo) {
 											notifySwitchHitEventHandlers({ switchInfo, closed: !isOpenNow });
+										} else {
+											console.error(
+												`you need to add switch ID ${switchChangedId} to Switches.switches`
+											);
 										}
 									}
 								}
@@ -172,10 +181,12 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				});
 
 				// Configure Left Flipper Hold Coil
+				//  I don't understand why these need to be exactly this way, but most other variations cause coil to buzz.
+				//  I would think kick power and time should be 0, and latch power could be less than 100%, but does not work.
 				await fastWriter.coil.latch({
 					coilId: leftFlipperHoldCoil.id,
-					kickPowerPercent: 0,
-					kickTimeInMilliseconds: 0,
+					kickPowerPercent: 1,
+					kickTimeInMilliseconds: 10,
 					latchPowerPercent: 1,
 					restTimeInMilliseconds: 90,
 					switchCondition: true,

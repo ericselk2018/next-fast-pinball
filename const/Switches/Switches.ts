@@ -21,29 +21,23 @@ export const leftFlipperEndOfStrokeSwitch: SwitchInfo = {
 	id: id(0),
 	name: 'Left Flipper End of Stroke',
 };
-export const leftSlingSwitch: SwitchInfo = {
+export const drainSwitch: SwitchInfo = {
 	id: id(1),
-	name: 'Left Sling',
+	name: 'Drain',
 };
-export const leftRolloverSwitch: SwitchInfo = {
-	id: id(2),
-	name: 'Left Rollover',
-};
+export const coinSlotSwitch: SwitchInfo = { id: id(2), name: 'Coin Slot', normallyClosed: true };
 export const rightFlipperEndOfStrokeSwitch: SwitchInfo = {
 	id: id(3),
 	name: 'Right Flipper End of Stroke',
 };
-export const rightSlingSwitch: SwitchInfo = {
-	id: id(4),
-	name: 'Right Sling',
-};
-export const rightRolloverSwitch: SwitchInfo = {
-	id: id(5),
-	name: 'Right Rollover',
-};
 export const inlaneSwitch: SwitchInfo = {
-	id: id(6),
+	id: id(4),
 	name: 'Inlane Rollover',
+};
+export const startButtonSwitch: SwitchInfo = { id: id(5), name: 'Start Button', normallyClosed: true };
+export const rightSlingSwitch: SwitchInfo = {
+	id: id(6),
+	name: 'Right Sling',
 };
 export const domSwitch: TargetSwitchInfo = {
 	id: id(7),
@@ -55,9 +49,19 @@ export const domSwitch: TargetSwitchInfo = {
 id = (pin: number) => switchId({ board: lowerThirdNodeBoard, header: 1, pin });
 export const leftFlipperButtonSwitch: SwitchInfo = { id: id(0), name: 'Left Flipper Button' };
 export const rightFlipperButtonSwitch: SwitchInfo = { id: id(1), name: 'Right Flipper Button' };
-export const startButtonSwitch: SwitchInfo = { id: id(2), name: 'Start Button' };
-export const coinSlotSwitch: SwitchInfo = { id: id(3), name: 'Coin Slot' };
+export const rightRolloverSwitch: SwitchInfo = {
+	id: id(2),
+	name: 'Right Rollover',
+};
+export const leftRolloverSwitch: SwitchInfo = {
+	id: id(3),
+	name: 'Left Rollover',
+};
 export const selectButtonSwitch: SwitchInfo = { id: id(4), name: 'Select Button' };
+export const leftSlingSwitch: SwitchInfo = {
+	id: id(5),
+	name: 'Left Sling',
+};
 
 id = (pin: number) => switchId({ board: lowerThirdNodeBoard, header: 2, pin });
 export const brianSwitch: TargetSwitchInfo = {
@@ -131,6 +135,7 @@ const switches: ReadonlyArray<SwitchInfo> = [
 	leftRolloverSwitch,
 	rightSlingSwitch,
 	rightRolloverSwitch,
+	drainSwitch,
 ];
 
 export default switches;
