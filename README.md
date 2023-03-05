@@ -158,6 +158,10 @@ Information about game modes.
 
 Show me the money!
 
+#### NodeBoards
+
+The node boards in our system. Also known as I/O boards.
+
 #### Rules
 
 Without rules, we have chaos.
