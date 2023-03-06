@@ -35,9 +35,9 @@ export const inlaneSwitch: SwitchInfo = {
 	name: 'Inlane Rollover',
 };
 export const startButtonSwitch: SwitchInfo = { id: id(5), name: 'Start Button', normallyClosed: true };
-export const rightSlingSwitch: SwitchInfo = {
+export const rightSlingshotSwitch: SwitchInfo = {
 	id: id(6),
-	name: 'Right Sling',
+	name: 'Right Slingshot',
 };
 export const domSwitch: TargetSwitchInfo = {
 	id: id(7),
@@ -58,9 +58,9 @@ export const leftRolloverSwitch: SwitchInfo = {
 	name: 'Left Rollover',
 };
 export const selectButtonSwitch: SwitchInfo = { id: id(4), name: 'Select Button' };
-export const leftSlingSwitch: SwitchInfo = {
+export const leftSlingshotSwitch: SwitchInfo = {
 	id: id(5),
-	name: 'Left Sling',
+	name: 'Left Slingshot',
 };
 
 id = (pin: number) => switchId({ board: lowerThirdNodeBoard, header: 2, pin });
@@ -94,7 +94,7 @@ export const chargerSwitch: TargetSwitchInfo = {
 	image: 'images/charger.jpg',
 	videos: ['videos/charger1.mp4'],
 };
-export const domHomeSwitch: TargetSwitchInfo = {
+export const leftKickerSwitch: TargetSwitchInfo = {
 	id: id(5),
 	name: 'Dom Home',
 	image: 'images/domHome.jpg',
@@ -117,10 +117,9 @@ export const underRogersTruckSwitch: TargetSwitchInfo = {
 
 export const driverSwitches: ReadonlyArray<TargetSwitchInfo> = [domSwitch, brianSwitch, miaSwitch, lettySwitch];
 export const carSwitches: ReadonlyArray<TargetSwitchInfo> = [skylineSwitch, chargerSwitch];
-export const hideSwitches: ReadonlyArray<TargetSwitchInfo> = [domHomeSwitch];
+export const kickerSwitches: ReadonlyArray<TargetSwitchInfo> = [leftKickerSwitch];
 export const truckSwitches: ReadonlyArray<TargetSwitchInfo> = [rogersTruckSwitch];
 export const stuntSwitches: ReadonlyArray<TargetSwitchInfo> = [underRogersTruckSwitch];
-export const kickerSwitches = hideSwitches;
 
 const switches: ReadonlyArray<SwitchInfo> = [
 	leftFlipperEndOfStrokeSwitch,
@@ -131,9 +130,9 @@ const switches: ReadonlyArray<SwitchInfo> = [
 	startButtonSwitch,
 	inlaneSwitch,
 	domSwitch,
-	leftSlingSwitch,
+	leftSlingshotSwitch,
 	leftRolloverSwitch,
-	rightSlingSwitch,
+	rightSlingshotSwitch,
 	rightRolloverSwitch,
 	drainSwitch,
 ];

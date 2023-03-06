@@ -7,18 +7,16 @@ import {
 } from '../../const/Coils/Coils';
 import flippers, { FlipperInfo } from '../../const/Flippers/Flippers';
 import keyBindings from '../../const/KeyBindings/KeyBindings';
-import lights, { LightInfo } from '../../const/Lights/Lights';
 import { useVirtualHardware } from '../../const/Setup/Setup';
-import Flipper from '../../entities/Flipper';
 import Hardware from '../../entities/Hardware';
-import Kicker from '../../entities/Kicker';
-import Light from '../../entities/Light';
 import Switch from '../../entities/Switch';
 import TargetSwitch from '../../entities/TargetSwitch';
 import FastWriter from '../../lib/FastWriter/FastWriter';
 import { bitTest } from '../../lib/math/math';
 import { createContext, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import switches, { kickerSwitches, SwitchInfo, TargetSwitchInfo } from '../../const/Switches/Switches';
+import switches, { SwitchInfo, TargetSwitchInfo } from '../../const/Switches/Switches';
+import { SlingshotInfo, slingshots } from 'const/Slingshots/Slingshots';
+import { KickerInfo, kickers } from 'const/Kickers/Kickers';
 
 // These will need to be adjusted if FAST changes these.
 const usbVendorId = 11914;
@@ -151,6 +149,40 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		[fastWriter.coil]
 	);
 
+	const configureSlingshot = useCallback(
+		async (args: { slingshot: SlingshotInfo }) => {
+			const { slingshot } = args;
+			const { coil, switchInfo } = slingshot;
+
+			await fastWriter.coil.configurePulse({
+				coilId: coil.id,
+				switchId: switchInfo.id,
+				switchCondition: true,
+				pulsePowerPercent: 1,
+				pulseTimeInMilliseconds: 30,
+				restTimeInMilliseconds: 90,
+			});
+		},
+		[fastWriter.coil]
+	);
+
+	const configureKicker = useCallback(
+		async (args: { kicker: KickerInfo }) => {
+			const { kicker } = args;
+			const { coil, switchInfo } = kicker;
+
+			await fastWriter.coil.configurePulse({
+				coilId: coil.id,
+				switchId: switchInfo.id,
+				switchCondition: true,
+				pulsePowerPercent: 1,
+				pulseTimeInMilliseconds: 30,
+				restTimeInMilliseconds: 90,
+			});
+		},
+		[fastWriter.coil]
+	);
+
 	const open = useCallback(
 		async (port: SerialPort) => {
 			try {
@@ -207,13 +239,29 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					await configureFlipper({ flipper });
 				}
 
+				for (const slingshot of slingshots) {
+					await configureSlingshot({ slingshot });
+				}
+
+				for (const kicker of kickers) {
+					await configureKicker({ kicker });
+				}
+
 				disableFlippers();
 			} catch (reason: unknown) {
 				// dangerous as cast, need to read more about TypeScript specific exception handling
 				setLastError(reason as Error);
 			}
 		},
-		[fastWriter, disableFlippers, switchesOpen, notifySwitchHitEventHandlers, configureFlipper]
+		[
+			fastWriter,
+			disableFlippers,
+			switchesOpen,
+			notifySwitchHitEventHandlers,
+			configureFlipper,
+			configureSlingshot,
+			configureKicker,
+		]
 	);
 
 	// Keep watchdog happy.  FAST uses this to disable things if our app crashes or loses the connection.
@@ -325,17 +373,6 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		[addSwitchHitEventHandler, switchesOpen]
 	);
 
-	const flipperInfoToFlipper = useCallback(
-		(flipperInfo: FlipperInfo): Flipper => {
-			const { buttonSwitch, endOfStrokeSwitch } = flipperInfo;
-			return {
-				buttonSwitch: switchInfoToSwitch(buttonSwitch),
-				endOfStrokeSwitch: switchInfoToSwitch(endOfStrokeSwitch),
-			};
-		},
-		[switchInfoToSwitch]
-	);
-
 	const targetSwitchInfoToTargetSwitch = useCallback(
 		(targetInfo: TargetSwitchInfo): TargetSwitch => {
 			const { image, videos } = targetInfo;
@@ -343,21 +380,6 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		},
 		[switchInfoToSwitch]
 	);
-
-	const targetInfoToKicker = useCallback(
-		(targetInfo: TargetSwitchInfo): Kicker => {
-			return { ...targetSwitchInfoToTargetSwitch(targetInfo), hasBall: false };
-		},
-		[targetSwitchInfoToTargetSwitch]
-	);
-
-	const lightInfoToLight = useCallback((lightInfo: LightInfo): Light => {
-		const { name, id } = lightInfo;
-		return {
-			name,
-			id,
-		};
-	}, []);
 
 	const addSwitchHandler = useCallback(
 		(args: {
@@ -377,26 +399,13 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 
 	const context: Hardware = useMemo(
 		() => ({
-			flippers: flippers.map(flipperInfoToFlipper),
-			kickers: kickerSwitches.map(targetInfoToKicker),
-			lights: lights.map(lightInfoToLight),
-			switches: switches.map(switchInfoToSwitch),
 			switchInfoToSwitch,
 			targetSwitchInfoToTargetSwitch,
 			enableFlippers,
 			disableFlippers,
 			addSwitchHandler,
 		}),
-		[
-			flipperInfoToFlipper,
-			lightInfoToLight,
-			switchInfoToSwitch,
-			targetInfoToKicker,
-			targetSwitchInfoToTargetSwitch,
-			enableFlippers,
-			disableFlippers,
-			addSwitchHandler,
-		]
+		[addSwitchHandler, disableFlippers, enableFlippers, switchInfoToSwitch, targetSwitchInfoToTargetSwitch]
 	);
 
 	if (lastError) {

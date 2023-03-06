@@ -137,10 +137,42 @@ const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 			await writeCommand('TL', coilId, controlValue, switchId);
 		};
 
+		const configurePulse = async (args: {
+			coilId: number;
+			switchId: number;
+			switchCondition: boolean;
+			pulsePowerPercent: number;
+			pulseTimeInMilliseconds: number;
+			restTimeInMilliseconds: number;
+		}) => {
+			const {
+				coilId,
+				pulsePowerPercent,
+				pulseTimeInMilliseconds,
+				restTimeInMilliseconds,
+				switchCondition,
+				switchId,
+			} = args;
+			const coilMode = 0x10;
+			await writeCommand(
+				'DL',
+				coilId,
+				switchCondition ? 0x01 : 0x11,
+				switchId,
+				coilMode,
+				pulseTimeInMilliseconds,
+				percentToByteValue(pulsePowerPercent),
+				0,
+				0,
+				restTimeInMilliseconds
+			);
+		};
+
 		return {
 			configureAutoTriggeredDiverter,
 			latch,
 			modifyTrigger,
+			configurePulse,
 		};
 	})();
 

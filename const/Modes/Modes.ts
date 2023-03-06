@@ -1,7 +1,7 @@
 import {
 	carSwitches,
 	driverSwitches,
-	hideSwitches,
+	kickerSwitches,
 	stuntSwitches,
 	TargetSwitchInfo,
 	truckSwitches,
@@ -25,7 +25,7 @@ export const boostCarsMode: ModeInfo = {
 	steps: [
 		{ name: 'Select Driver', switches: driverSwitches },
 		{ name: 'Boost Car', switches: carSwitches },
-		{ name: 'Hide Car', switches: hideSwitches },
+		{ name: 'Hide Car', switches: kickerSwitches },
 	],
 };
 
