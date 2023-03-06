@@ -1,4 +1,10 @@
-import { CoilInfo, leftFlipperHoldCoil, leftFlipperMainCoil } from '../../const/Coils/Coils';
+import {
+	CoilInfo,
+	leftFlipperHoldCoil,
+	leftFlipperMainCoil,
+	rightFlipperHoldCoil,
+	rightFlipperMainCoil,
+} from '../../const/Coils/Coils';
 import flippers, { FlipperInfo } from '../../const/Flippers/Flippers';
 import keyBindings from '../../const/KeyBindings/KeyBindings';
 import lights, { LightInfo } from '../../const/Lights/Lights';
@@ -98,6 +104,8 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			const { enable } = args;
 			enableOrDisableCoil({ enable, coil: leftFlipperMainCoil });
 			enableOrDisableCoil({ enable, coil: leftFlipperHoldCoil });
+			enableOrDisableCoil({ enable, coil: rightFlipperMainCoil });
+			enableOrDisableCoil({ enable, coil: rightFlipperHoldCoil });
 		},
 		[enableOrDisableCoil]
 	);

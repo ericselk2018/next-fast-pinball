@@ -13,7 +13,7 @@ import * as S from './GameController.styles';
 const GameController = () => {
 	const { enableFlippers, disableFlippers } = useContext(HardwareContext);
 	const game = useContext(GameContext);
-	const { ballsInPlay, setBallsInPlay, modes, currentModeIndex, currentModeStep, currentPlayer } = game;
+	const { ballsInPlay, setBallsInPlay, modes, currentModeIndex, currentModeStep, currentPlayer, nextPlayer } = game;
 	const incompleteSwitches = currentModeStep?.incompleteSwitches || [];
 
 	// Switch modes using flippers whenever no balls in play.
@@ -57,10 +57,12 @@ const GameController = () => {
 	// Decrease balls when drain switch is hit.
 	useSwitch(
 		() => {
-			console.log('drain');
 			setBallsInPlay((ballsInPlay) => ballsInPlay - 1);
+			if (ballsInPlay === 1) {
+				game.currentPlayer = nextPlayer;
+			}
 		},
-		[setBallsInPlay],
+		[ballsInPlay, game, nextPlayer, setBallsInPlay],
 		drainSwitch
 	);
 

@@ -13,7 +13,9 @@ declare type PinNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 const id = (pin: PinNumber) => coilId({ board: lowerThirdNodeBoard, header: 0, pin });
 export const leftFlipperMainCoil: CoilInfo = { name: 'Left Flipper', id: id(0) };
 export const leftFlipperHoldCoil: CoilInfo = { name: 'Left Flipper Hold', id: id(1) };
+export const rightFlipperMainCoil: CoilInfo = { name: 'Right Flipper', id: id(2) };
+export const rightFlipperHoldCoil: CoilInfo = { name: 'Right Flipper Hold', id: id(3) };
 
-const coils: CoilInfo[] = [leftFlipperMainCoil, leftFlipperHoldCoil];
+const coils: CoilInfo[] = [leftFlipperMainCoil, leftFlipperHoldCoil, rightFlipperMainCoil, rightFlipperHoldCoil];
 
 export default coils;

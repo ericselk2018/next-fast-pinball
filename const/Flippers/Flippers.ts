@@ -1,4 +1,10 @@
-import { CoilInfo, leftFlipperHoldCoil, leftFlipperMainCoil } from 'const/Coils/Coils';
+import {
+	CoilInfo,
+	leftFlipperHoldCoil,
+	leftFlipperMainCoil,
+	rightFlipperHoldCoil,
+	rightFlipperMainCoil,
+} from 'const/Coils/Coils';
 import {
 	leftFlipperButtonSwitch,
 	leftFlipperEndOfStrokeSwitch,
@@ -24,8 +30,8 @@ export const leftFlipper: FlipperInfo = {
 export const rightFlipper: FlipperInfo = {
 	buttonSwitch: rightFlipperButtonSwitch,
 	endOfStrokeSwitch: rightFlipperEndOfStrokeSwitch,
-	mainCoil: leftFlipperMainCoil,
-	holdCoil: leftFlipperHoldCoil,
+	mainCoil: rightFlipperMainCoil,
+	holdCoil: rightFlipperHoldCoil,
 };
 
 const flippers: ReadonlyArray<FlipperInfo> = [leftFlipper, rightFlipper];
