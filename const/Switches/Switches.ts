@@ -21,46 +21,56 @@ export const leftFlipperEndOfStrokeSwitch: SwitchInfo = {
 	id: id(0),
 	name: 'Left Flipper End of Stroke',
 };
-export const drainSwitch: SwitchInfo = {
+export const leftSlingshotSwitch: SwitchInfo = {
 	id: id(1),
-	name: 'Drain',
+	name: 'Left Slingshot',
 };
-export const coinSlotSwitch: SwitchInfo = { id: id(2), name: 'Coin Slot', normallyClosed: true };
+export const leftRolloverSwitch: SwitchInfo = {
+	id: id(2),
+	name: 'Left Rollover',
+};
 export const rightFlipperEndOfStrokeSwitch: SwitchInfo = {
 	id: id(3),
 	name: 'Right Flipper End of Stroke',
 };
-export const inlaneSwitch: SwitchInfo = {
-	id: id(4),
-	name: 'Inlane Rollover',
-};
-export const startButtonSwitch: SwitchInfo = { id: id(5), name: 'Start Button', normallyClosed: true };
 export const rightSlingshotSwitch: SwitchInfo = {
-	id: id(6),
+	id: id(4),
 	name: 'Right Slingshot',
+};
+export const rightRolloverSwitch: SwitchInfo = {
+	id: id(5),
+	name: 'Right Rollover',
+};
+export const rightBumperSwitch: SwitchInfo = {
+	id: id(6),
+	name: 'Right Bumper',
+};
+export const middleKickerSwitch: TargetSwitchInfo = {
+	id: id(7),
+	name: 'Dom Garage',
+	image: 'images/domGarage.jpg',
+	videos: ['videos/domGarage1.mp4'],
+};
+
+id = (pin: number) => switchId({ board: lowerThirdNodeBoard, header: 1, pin });
+export const leftFlipperButtonSwitch: SwitchInfo = { id: id(0), name: 'Left Flipper Button' };
+export const rightFlipperButtonSwitch: SwitchInfo = { id: id(1), name: 'Right Flipper Button' };
+export const startButtonSwitch: SwitchInfo = { id: id(5), name: 'Start Button', normallyClosed: true };
+export const coinSlotSwitch: SwitchInfo = { id: id(3), name: 'Coin Slot', normallyClosed: true };
+export const selectButtonSwitch: SwitchInfo = { id: id(4), name: 'Select Button' };
+export const drainSwitch: SwitchInfo = {
+	id: id(5),
+	name: 'Drain',
+};
+export const inlaneSwitch: SwitchInfo = {
+	id: id(6),
+	name: 'Inlane Rollover',
 };
 export const domSwitch: TargetSwitchInfo = {
 	id: id(7),
 	name: 'Dom Target',
 	image: 'images/dom.jpg',
 	videos: ['videos/dom1.mp4'],
-};
-
-id = (pin: number) => switchId({ board: lowerThirdNodeBoard, header: 1, pin });
-export const leftFlipperButtonSwitch: SwitchInfo = { id: id(0), name: 'Left Flipper Button' };
-export const rightFlipperButtonSwitch: SwitchInfo = { id: id(1), name: 'Right Flipper Button' };
-export const rightRolloverSwitch: SwitchInfo = {
-	id: id(2),
-	name: 'Right Rollover',
-};
-export const leftRolloverSwitch: SwitchInfo = {
-	id: id(3),
-	name: 'Left Rollover',
-};
-export const selectButtonSwitch: SwitchInfo = { id: id(4), name: 'Select Button' };
-export const leftSlingshotSwitch: SwitchInfo = {
-	id: id(5),
-	name: 'Left Slingshot',
 };
 
 id = (pin: number) => switchId({ board: lowerThirdNodeBoard, header: 2, pin });
@@ -117,9 +127,10 @@ export const underRogersTruckSwitch: TargetSwitchInfo = {
 
 export const driverSwitches: ReadonlyArray<TargetSwitchInfo> = [domSwitch, brianSwitch, miaSwitch, lettySwitch];
 export const carSwitches: ReadonlyArray<TargetSwitchInfo> = [skylineSwitch, chargerSwitch];
-export const kickerSwitches: ReadonlyArray<TargetSwitchInfo> = [leftKickerSwitch];
+export const kickerSwitches: ReadonlyArray<TargetSwitchInfo> = [leftKickerSwitch, middleKickerSwitch];
 export const truckSwitches: ReadonlyArray<TargetSwitchInfo> = [rogersTruckSwitch];
 export const stuntSwitches: ReadonlyArray<TargetSwitchInfo> = [underRogersTruckSwitch];
+export const bumperSwitches: ReadonlyArray<SwitchInfo> = [rightBumperSwitch];
 
 const switches: ReadonlyArray<SwitchInfo> = [
 	leftFlipperEndOfStrokeSwitch,

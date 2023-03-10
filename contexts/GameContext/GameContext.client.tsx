@@ -10,6 +10,7 @@ import { filterUndefined, replaceItemAtIndex } from '../../lib/array/array';
 import { useToggleSwitches } from '../../lib/switch/switch';
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import HardwareContext from '../HardwareContext/HardwareContext';
+import { autoStartBallsInPlay } from 'const/Setup/Setup';
 
 interface CompletedTask {
 	step: string;
@@ -40,7 +41,7 @@ export const GameContextProvider = ({
 	const [videoPlaying, setVideoPlaying] = useState('');
 	const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
 	const [saucerHolesWithBallsSwitchIds, setSaucerHolesWithBallsSwitchIds] = useState<number[]>([]);
-	const [ballsInPlay, setBallsInPlay] = useState(0);
+	const [ballsInPlay, setBallsInPlay] = useState(autoStartBallsInPlay);
 
 	const modeStepInfoToModeStep = useCallback(
 		(modeStepInfo: ModeStepInfo): ModeStep => {

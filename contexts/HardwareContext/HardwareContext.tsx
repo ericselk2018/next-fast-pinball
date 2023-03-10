@@ -17,6 +17,7 @@ import { createContext, ReactNode, useCallback, useEffect, useMemo, useRef, useS
 import switches, { SwitchInfo, TargetSwitchInfo } from '../../const/Switches/Switches';
 import { SlingshotInfo, slingshots } from 'const/Slingshots/Slingshots';
 import { KickerInfo, kickers } from 'const/Kickers/Kickers';
+import { BumperInfo, bumpers } from 'const/Bumpers/Bumpers';
 
 // These will need to be adjusted if FAST changes these.
 const usbVendorId = 11914;
@@ -183,6 +184,23 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		[fastWriter.coil]
 	);
 
+	const configureBumper = useCallback(
+		async (args: { bumper: BumperInfo }) => {
+			const { bumper } = args;
+			const { coil, switchInfo } = bumper;
+
+			await fastWriter.coil.configurePulse({
+				coilId: coil.id,
+				switchId: switchInfo.id,
+				switchCondition: true,
+				pulsePowerPercent: 1,
+				pulseTimeInMilliseconds: 30,
+				restTimeInMilliseconds: 90,
+			});
+		},
+		[fastWriter.coil]
+	);
+
 	const open = useCallback(
 		async (port: SerialPort) => {
 			try {
@@ -247,6 +265,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					await configureKicker({ kicker });
 				}
 
+				for (const bumper of bumpers) {
+					await configureBumper({ bumper });
+				}
+
 				disableFlippers();
 			} catch (reason: unknown) {
 				// dangerous as cast, need to read more about TypeScript specific exception handling
@@ -261,6 +283,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			configureFlipper,
 			configureSlingshot,
 			configureKicker,
+			configureBumper,
 		]
 	);
 
