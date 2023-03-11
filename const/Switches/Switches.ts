@@ -144,6 +144,7 @@ export const rightFlipperButtonSwitch: SwitchInfo = { id: id(1), name: 'Right Fl
 export const startButtonSwitch: SwitchInfo = { id: id(2), name: 'Start Button' };
 export const selectButtonSwitch: SwitchInfo = { id: id(3), name: 'Select Button' };
 export const tiltSwitch: SwitchInfo = { id: id(4), name: 'Tilt' };
+export const coinDoorSwitch: SwitchInfo = { id: id(5), name: 'Coin Door' };
 
 // Not yet wired, we just assign a large non-duplicate number for now.
 id = (pin: number) => 1000 + pin;
