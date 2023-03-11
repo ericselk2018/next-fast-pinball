@@ -1,4 +1,4 @@
-import { drainSwitch, inlaneSwitch } from '../../const/Switches/Switches';
+import { drainSwitch, inlaneRolloverSwitch } from '../../const/Switches/Switches';
 import GameContext from '../../contexts/GameContext/GameContext.client';
 import HardwareContext from '../../contexts/HardwareContext/HardwareContext';
 import TargetSwitch from '../../entities/TargetSwitch';
@@ -51,7 +51,7 @@ const GameController = () => {
 			currentPlayer.usedBalls = currentPlayer.usedBalls + 1;
 		},
 		[currentPlayer, setBallsInPlay],
-		inlaneSwitch
+		inlaneRolloverSwitch
 	);
 
 	// Decrease balls when drain switch is hit.

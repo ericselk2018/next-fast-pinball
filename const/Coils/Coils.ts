@@ -1,5 +1,5 @@
 import { coilId } from '../../lib/id/id';
-import { lowerThirdNodeBoard } from '../NodeBoards/NodeBoards';
+import { lowerThirdNodeBoard, upperThirdNodeBoard } from '../NodeBoards/NodeBoards';
 
 export interface CoilInfo {
 	name: string;
@@ -17,13 +17,16 @@ export const rightFlipperMainCoil: CoilInfo = { name: 'Right Flipper', id: id(2)
 export const rightFlipperHoldCoil: CoilInfo = { name: 'Right Flipper Hold', id: id(3) };
 export const leftSlingshotCoil: CoilInfo = { name: 'Left Slingshot', id: id(4) };
 export const rightSlingshotCoil: CoilInfo = { name: 'Right Slingshot', id: id(5) };
-export const rightBumperCoil: CoilInfo = { name: 'Right Bumper', id: id(6) };
-export const middleKickerCoil: CoilInfo = { name: 'Middle Kicker', id: id(7) };
+export const troughBallEject: CoilInfo = { name: 'Trough Ball Eject', id: id(6) };
 
-id = (pin: PinNumber) => coilId({ board: lowerThirdNodeBoard, header: 1, pin });
-export const topKickerCoil: CoilInfo = { name: 'Top Kicker', id: id(0) };
-export const rightKickerCoil: CoilInfo = { name: 'Right Kicker', id: id(2) };
-export const leftKickerCoil: CoilInfo = { name: 'Left Kicker', id: id(3) };
+id = (pin: PinNumber) => coilId({ board: upperThirdNodeBoard, header: 0, pin });
+export const rightKickerCoil: CoilInfo = { name: 'Right Kicker', id: id(0) };
+export const rightBumperCoil: CoilInfo = { name: 'Right Bumper', id: id(1) };
+export const middleKickerCoil: CoilInfo = { name: 'Middle Kicker', id: id(2) };
+export const topKickerCoil: CoilInfo = { name: 'Top Kicker', id: id(3) };
+export const middleBumperCoil: CoilInfo = { name: 'Middle Bumper', id: id(4) };
+export const leftBumperCoil: CoilInfo = { name: 'Left Bumper', id: id(5) };
+export const leftKickerCoil: CoilInfo = { name: 'Left Kicker', id: id(6) };
 
 const coils: CoilInfo[] = [leftFlipperMainCoil, leftFlipperHoldCoil, rightFlipperMainCoil, rightFlipperHoldCoil];
 
