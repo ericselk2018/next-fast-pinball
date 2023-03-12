@@ -184,10 +184,10 @@ export const GameContextProvider = ({
 		setShots((shots) => [...shots, shot]);
 	}, []);
 
-	const saucerHolesWithBalls = useMemo(() => {
+	const kickersWithBalls = useMemo(() => {
 		return filterUndefined(
-			kickersWithBallsSwitchIds.map((saucerHolesWithBallsSwitchId) =>
-				kickerSwitches.find((kickerSwitch) => kickerSwitch.id === saucerHolesWithBallsSwitchId)
+			kickersWithBallsSwitchIds.map((kickerWithBallSwitchId) =>
+				kickerSwitches.find((kickerSwitch) => kickerSwitch.id === kickerWithBallSwitchId)
 			)
 		).map(targetSwitchInfoToTargetSwitch);
 	}, [kickersWithBallsSwitchIds, targetSwitchInfoToTargetSwitch]);
@@ -334,7 +334,7 @@ export const GameContextProvider = ({
 
 	const context: Game = useMemo(
 		() => ({
-			saucerHolesWithBalls,
+			kickersWithBalls,
 			modes: modes.map(modeInfoToMode),
 			ballsInPlay,
 			currentModeStep,
@@ -368,7 +368,7 @@ export const GameContextProvider = ({
 			ballsInPlayUpdatePending,
 		}),
 		[
-			saucerHolesWithBalls,
+			kickersWithBalls,
 			modeInfoToMode,
 			ballsInPlay,
 			currentModeStep,

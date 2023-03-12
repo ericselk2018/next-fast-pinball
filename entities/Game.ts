@@ -18,7 +18,7 @@ export default interface Game {
 	addShot: (shot: Shot) => void;
 	videoPlaying: string;
 	readonly modes: ReadonlyArray<Mode>;
-	readonly saucerHolesWithBalls: ReadonlyArray<TargetSwitch>;
+	readonly kickersWithBalls: ReadonlyArray<TargetSwitch>;
 	readonly ejectBall: () => void;
 	readonly ballEjecting: boolean;
 	readonly kickBall: (args: { kicker: KickerInfo }) => void;

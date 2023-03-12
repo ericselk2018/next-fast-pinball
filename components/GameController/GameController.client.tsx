@@ -25,7 +25,7 @@ const GameController = () => {
 		currentModeStep,
 		ejectBall,
 		kickBall,
-		saucerHolesWithBalls,
+		kickersWithBalls,
 		modeComplete,
 	} = game;
 	const incompleteSwitches = currentModeStep?.incompleteSwitches || [];
@@ -100,13 +100,12 @@ const GameController = () => {
 	//  we kick all balls from kickers to start multi - ball.
 	useEffect(() => {
 		if (
-			(saucerHolesWithBalls.length === totalBallsInMachine ||
-				saucerHolesWithBalls.length === kickerSwitches.length) &&
+			(kickersWithBalls.length === totalBallsInMachine || kickersWithBalls.length === kickerSwitches.length) &&
 			modeComplete
 		) {
 			// Timeout is mostly for dramatic effect - suspense.
 			setTimeout(() => {
-				saucerHolesWithBalls.forEach((saucerHolesWithBall) => {
+				kickersWithBalls.forEach((saucerHolesWithBall) => {
 					const kicker = kickers.find((kicker) => kicker.switchInfo.id === saucerHolesWithBall.id);
 					if (kicker) {
 						kickBall({ kicker });
@@ -114,7 +113,7 @@ const GameController = () => {
 				});
 			}, 1000);
 		}
-	}, [kickBall, modeComplete, saucerHolesWithBalls]);
+	}, [kickBall, modeComplete, kickersWithBalls]);
 
 	return (
 		<S.Container>

@@ -10,7 +10,7 @@ interface Props {
 }
 
 const ModeSlide = (props: Props) => {
-	const { ballsInPlay, currentModeStep, modeComplete, saucerHolesWithBalls } = useContext(GameContext);
+	const { ballsInPlay, currentModeStep, modeComplete, kickersWithBalls } = useContext(GameContext);
 	const { active, mode } = props;
 	const { name, video, steps } = mode;
 	const videoElement = useRef<HTMLVideoElement>(null);
@@ -51,7 +51,7 @@ const ModeSlide = (props: Props) => {
 											const complete = completedSwitches.some(
 												(completedSwitch) => completedSwitch.id === id
 											);
-											const available = !saucerHolesWithBalls.some(
+											const available = !kickersWithBalls.some(
 												(saucerHolesWithBall) => saucerHolesWithBall.id === id
 											);
 											return (
