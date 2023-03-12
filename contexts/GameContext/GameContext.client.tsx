@@ -1,5 +1,5 @@
 import modes, { ModeInfo, ModeStepInfo } from '../../const/Modes/Modes';
-import { startingBallsPerPlayer, startingScore } from '../../const/Rules/Rules';
+import { clearProgressWhenNoBallsInPlay, startingBallsPerPlayer, startingScore } from '../../const/Rules/Rules';
 import {
 	plungerRolloverSwitch,
 	kickerSwitches,
@@ -59,6 +59,8 @@ export const GameContextProvider = ({
 	);
 	const [ballEjecting, setBallEjecting] = useState(false);
 	const [ballsInPlay, setBallsInPlay] = useState(autoStartBallsInPlay);
+	const [maybeKicking, setMaybeKicking] = useState(false);
+	const [ballsInPlayUpdatePending, setBallsInPlayUpdatePending] = useState(false);
 
 	// Keep some global variables updated for debug purposes, so we can inspect them in browser console easily.
 	useEffect(() => {
@@ -206,14 +208,14 @@ export const GameContextProvider = ({
 	useToggleSwitches(
 		({ closed, switchInfo }) => {
 			const { id } = switchInfo;
-			setKickersWithBallsSwitchIds((saucerHolesWithBalls) => {
+			setKickersWithBallsSwitchIds((kickersWithBallsSwitchIds) => {
 				if (closed) {
-					if (saucerHolesWithBalls.includes(id)) {
-						return saucerHolesWithBalls;
+					if (kickersWithBallsSwitchIds.includes(id)) {
+						return kickersWithBallsSwitchIds;
 					}
-					return [...saucerHolesWithBalls, id];
+					return [...kickersWithBallsSwitchIds, id];
 				} else {
-					return saucerHolesWithBalls.filter((n) => n !== id);
+					return kickersWithBallsSwitchIds.filter((n) => n !== id);
 				}
 			});
 		},
@@ -245,16 +247,53 @@ export const GameContextProvider = ({
 	//  While balls are rolling down the trough and toggling switches on/off.
 	// Also never updates the count while a ball is ejecting.
 	useEffect(() => {
-		if (!ballEjecting) {
+		if (!ballEjecting && !maybeKicking) {
+			setBallsInPlayUpdatePending(true);
 			const timeout = setTimeout(() => {
-				const currentBallsInPlay = totalBallsInMachine - troughSlotsWithBallsSwitchIds.length;
+				setBallsInPlayUpdatePending(false);
+				const currentBallsInPlay =
+					totalBallsInMachine - (troughSlotsWithBallsSwitchIds.length + kickersWithBallsSwitchIds.length);
 				if (currentBallsInPlay !== ballsInPlay) {
 					setBallsInPlay(currentBallsInPlay);
 				}
 			}, 1000);
 			return () => clearTimeout(timeout);
 		}
-	}, [ballEjecting, ballsInPlay, troughSlotsWithBallsSwitchIds.length]);
+	}, [
+		ballEjecting,
+		ballsInPlay,
+		kickersWithBallsSwitchIds.length,
+		maybeKicking,
+		troughSlotsWithBallsSwitchIds.length,
+	]);
+
+	// Whenever balls land in kickers we set a flag that auto clears after a set period, so that we will not
+	//  update balls in play count until we know for sure that it will not be kicked back in to play.
+	useEffect(() => {
+		setMaybeKicking(true);
+		const timeout = setTimeout(
+			() => {
+				setMaybeKicking(false);
+			},
+			// TODO: remove magic numbers used for various timers
+			2000
+		);
+		return () => {
+			clearTimeout(timeout);
+			setMaybeKicking(false);
+		};
+	}, [kickersWithBallsSwitchIds]);
+
+	const modeComplete = useMemo(() => {
+		return !!ballsInPlay && !currentModeStep;
+	}, [ballsInPlay, currentModeStep]);
+
+	// Clear completed tasks anytime no balls are in play, unless disabled by rule and we haven't completed all steps.
+	useEffect(() => {
+		if (!ballsInPlay && (clearProgressWhenNoBallsInPlay || !currentModeStep)) {
+			setTasksCompleted([]);
+		}
+	}, [ballsInPlay, currentModeStep]);
 
 	// Clear ball ejecting state if it lasts longer than 3 seconds.
 	// This happens if the ball fails to eject.
@@ -293,10 +332,6 @@ export const GameContextProvider = ({
 		[hardware]
 	);
 
-	const modeComplete = useMemo(() => {
-		return !!ballsInPlay && !currentModeStep;
-	}, [ballsInPlay, currentModeStep]);
-
 	const context: Game = useMemo(
 		() => ({
 			saucerHolesWithBalls,
@@ -330,6 +365,7 @@ export const GameContextProvider = ({
 			ballEjecting,
 			kickBall,
 			modeComplete,
+			ballsInPlayUpdatePending,
 		}),
 		[
 			saucerHolesWithBalls,
@@ -348,6 +384,7 @@ export const GameContextProvider = ({
 			ballEjecting,
 			kickBall,
 			modeComplete,
+			ballsInPlayUpdatePending,
 		]
 	);
 

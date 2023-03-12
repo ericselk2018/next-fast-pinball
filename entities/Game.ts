@@ -22,4 +22,5 @@ export default interface Game {
 	readonly ejectBall: () => void;
 	readonly ballEjecting: boolean;
 	readonly kickBall: (args: { kicker: KickerInfo }) => void;
+	readonly ballsInPlayUpdatePending: boolean;
 }

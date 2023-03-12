@@ -67,7 +67,7 @@ export const StepImages = styled.div`
 `;
 
 export const StepImage = styled.div(
-	({ complete }: { complete: boolean }) => `
+	({ complete, available }: { complete: boolean; available: boolean }) => `
 	position: relative;
 	overflow: hidden;
 	border-radius: 20px;
@@ -84,11 +84,11 @@ export const StepImage = styled.div(
 		justify-content: center;
 		font-size: 80px;
 		font-weight: normal;
-		color: lime;
+		color: ${complete ? 'lime' : 'red'};
 		text-shadow: -1px 1px 0 black, 1px 1px 0 black, 1px -1px 0 black, -1px 1px 0 black;
 		-webkit-text-stroke: 1px black;
 		zoom: 2;
-		opacity: ${complete ? '1' : '0'};
+		opacity: ${complete || !available ? '1' : '0'};
 		transition: all 3s;
 		background-color: rgba(0,0,0,0.5);
 	}

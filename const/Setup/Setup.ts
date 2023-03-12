@@ -9,7 +9,7 @@ export const autoStartGamePlayers = 0;
 export const autoStartBallsInPlay = 0;
 
 // The number of balls in the machine.
-export const totalBallsInMachine = 1;
+export const totalBallsInMachine = 2;
 
 // Only used while doing dev work - to skip adding credits, normally set to 0.
 // My coin door isn't wired up yet :(

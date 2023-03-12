@@ -9,6 +9,7 @@ import * as S from './GameController.styles';
 import { kickerSwitches, startButtonSwitch } from 'const/Switches/Switches';
 import { kickers } from 'const/Kickers/Kickers';
 import AudioContext from 'contexts/AudioContext/AudioContext.client';
+import { totalBallsInMachine } from 'const/Setup/Setup';
 
 // StartController renders this after game is started.
 // We now have access to GameContext, and any components we render also can access it.
@@ -16,7 +17,17 @@ const GameController = () => {
 	const audio = useContext(AudioContext);
 	const { enableFlippers, disableFlippers } = useContext(HardwareContext);
 	const game = useContext(GameContext);
-	const { ballsInPlay, modes, currentModeIndex, currentModeStep, ejectBall, kickBall } = game;
+	const {
+		ballsInPlayUpdatePending,
+		ballsInPlay,
+		modes,
+		currentModeIndex,
+		currentModeStep,
+		ejectBall,
+		kickBall,
+		saucerHolesWithBalls,
+		modeComplete,
+	} = game;
 	const incompleteSwitches = currentModeStep?.incompleteSwitches || [];
 
 	// Switch modes using flippers whenever no balls in play.
@@ -59,9 +70,11 @@ const GameController = () => {
 	// Eject ball using start button while no balls in play.
 	useSwitch(
 		() => {
-			ejectBall();
+			if (!ballsInPlay && !ballsInPlayUpdatePending) {
+				ejectBall();
+			}
 		},
-		[ejectBall],
+		[ballsInPlay, ejectBall, ballsInPlayUpdatePending],
 		startButtonSwitch
 	);
 
@@ -82,6 +95,26 @@ const GameController = () => {
 		[currentModeStep?.switches, audio, kickBall],
 		kickerSwitches
 	);
+
+	// When a mode is complete and all kickers are full, or all balls are in kickers,
+	//  we kick all balls from kickers to start multi - ball.
+	useEffect(() => {
+		if (
+			(saucerHolesWithBalls.length === totalBallsInMachine ||
+				saucerHolesWithBalls.length === kickerSwitches.length) &&
+			modeComplete
+		) {
+			// Timeout is mostly for dramatic effect - suspense.
+			setTimeout(() => {
+				saucerHolesWithBalls.forEach((saucerHolesWithBall) => {
+					const kicker = kickers.find((kicker) => kicker.switchInfo.id === saucerHolesWithBall.id);
+					if (kicker) {
+						kickBall({ kicker });
+					}
+				});
+			}, 1000);
+		}
+	}, [kickBall, modeComplete, saucerHolesWithBalls]);
 
 	return (
 		<S.Container>
