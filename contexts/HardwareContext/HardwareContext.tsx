@@ -47,9 +47,14 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const [permissionRequired, setPermissionRequired] = useState(false);
 	const [usingVirtualHardware, setUsingVirtualHardware] = useState(useVirtualHardware);
 	const [bootDone, setBootDone] = useState(usingVirtualHardware);
-	const [switchesClosed, setSwitchesClosed] = useState(
-		Array<boolean>(Math.max(...switches.map((aSwitch) => aSwitch.id))).fill(false)
-	);
+	const defaultSwitchesClosed = Array<boolean>(Math.max(...switches.map((aSwitch) => aSwitch.id)))
+		.fill(false)
+		.map((_, switchId) => {
+			const switchInfo = switches.find((switchInfo) => switchInfo.id === switchId);
+			const closed = !!virtualClosedAtStartSwitches.find((switchInfo) => switchInfo.id === switchId);
+			return switchInfo?.normallyClosed ? !closed : closed;
+		});
+	const [switchesClosed, setSwitchesClosed] = useState(defaultSwitchesClosed);
 	const switchHitEventHandlers = useRef<SwitchHitEventHandler[]>([]);
 	const portWriter = useRef<WritableStreamDefaultWriter>();
 	const opening = useRef(false);
@@ -546,11 +551,6 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const handleUseVirtualHardwareClick = () => {
 		setUsingVirtualHardware(true);
 		setPermissionRequired(false);
-		setSwitchesClosed((switchesClosed) =>
-			switchesClosed.map(
-				(_, switchId) => !!virtualClosedAtStartSwitches.find((switchInfo) => switchInfo.id === switchId)
-			)
-		);
 	};
 
 	if (permissionRequired) {

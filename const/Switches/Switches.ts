@@ -173,8 +173,8 @@ export const driverSwitches: ReadonlyArray<TargetSwitchInfo> = [
 	fourTargetGroupBottomSwitch,
 ];
 export const carSwitches: ReadonlyArray<TargetSwitchInfo> = [
-	threeTargetGroupCenterSwitch,
 	threeTargetGroupOutsideSwitch,
+	threeTargetGroupCenterSwitch,
 	threeTargetGroupInsideSwitch,
 ];
 export const truckSwitches: ReadonlyArray<TargetSwitchInfo> = [topLeftTargetSwitch];
@@ -198,10 +198,10 @@ export const troughSwitches: ReadonlyArray<SwitchInfo> = [
 // In virtual hardware mode, we need a default state, so we list switches that should be closed on startup here.
 export const virtualClosedAtStartSwitches: ReadonlyArray<SwitchInfo> = [
 	troughBallOneSwitch,
-	troughBallTwoSwitch,
-	troughBallThreeSwitch,
-	troughBallFourSwitch,
-	troughBallFiveSwitch,
+	// troughBallTwoSwitch,
+	// troughBallThreeSwitch,
+	// troughBallFourSwitch,
+	// troughBallFiveSwitch,
 ];
 
 const switches: ReadonlyArray<SwitchInfo> = [

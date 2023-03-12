@@ -13,6 +13,10 @@ import {
 	selectButtonSwitch,
 	startButtonSwitch,
 	SwitchInfo,
+	fourTargetGroupBottomSwitch,
+	threeTargetGroupOutsideSwitch,
+	threeTargetGroupCenterSwitch,
+	threeTargetGroupInsideSwitch,
 } from '../Switches/Switches';
 
 const keyBindings: ReadonlyArray<KeyBindingInfo> = [
@@ -23,6 +27,10 @@ const keyBindings: ReadonlyArray<KeyBindingInfo> = [
 	{ key: 'Tab', switch: selectButtonSwitch },
 	{ key: 'p', switch: plungerRolloverSwitch },
 	{ key: 'd', switch: fourTargetGroupTopSwitch },
+	{ key: 'l', switch: fourTargetGroupBottomSwitch },
+	{ key: '1', switch: threeTargetGroupOutsideSwitch },
+	{ key: '2', switch: threeTargetGroupCenterSwitch },
+	{ key: '3', switch: threeTargetGroupInsideSwitch },
 ];
 
 export default keyBindings;

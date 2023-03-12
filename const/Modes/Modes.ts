@@ -34,8 +34,8 @@ export const truckHeistMode: ModeInfo = {
 	video: 'videos/truck-heist.mp4',
 	steps: [
 		{ name: 'Get Team', switches: driverSwitches, count: 2 },
-		{ name: 'Intercept Truck', switches: truckSwitches },
-		{ name: 'Insane Stunt', switches: stuntSwitches },
+		{ name: 'Rob Truck', switches: truckSwitches },
+		{ name: 'Do Stunt', switches: stuntSwitches },
 	],
 };
 

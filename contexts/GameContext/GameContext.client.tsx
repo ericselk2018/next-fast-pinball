@@ -121,6 +121,18 @@ export const GameContextProvider = ({
 	const currentMode = modeInfoToMode(modes[currentModeIndex]);
 	const currentModeStep = currentMode.steps.find((s) => s.completedSwitches.length < s.count);
 
+	// For UI testing while doing dev work.
+	// useEffect(() => {
+	// 	setTimeout(() => {
+	// 		setTasksCompleted([
+	// 			{ step: currentMode.steps[0].name, switchId: currentMode.steps[0].switches[0].id },
+	// 			// { step: currentMode.steps[0].name, switchId: currentMode.steps[0].switches[1].id },
+	// 			// { step: currentMode.steps[0].name, switchId: currentMode.steps[0].switches[2].id },
+	// 			// { step: currentMode.steps[0].name, switchId: currentMode.steps[0].switches[3].id },
+	// 		]);
+	// 	}, 3000);
+	// }, [currentMode.steps]);
+
 	const players: Player[] = playerInitials.map(
 		(initials, index): Player => ({
 			id: index + 1,

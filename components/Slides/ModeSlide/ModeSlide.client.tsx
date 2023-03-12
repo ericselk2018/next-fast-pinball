@@ -10,7 +10,7 @@ interface Props {
 }
 
 const ModeSlide = (props: Props) => {
-	const { ballsInPlay } = useContext(GameContext);
+	const { ballsInPlay, currentModeStep } = useContext(GameContext);
 	const { active, mode } = props;
 	const { name, video, steps } = mode;
 	const videoElement = useRef<HTMLVideoElement>(null);
@@ -39,7 +39,11 @@ const ModeSlide = (props: Props) => {
 						{steps.map((step, index) => {
 							const { name, switches, completedSwitches, count } = step;
 							return (
-								<S.Step complete={completedSwitches.length === count} active={true} key={index}>
+								<S.Step
+									complete={completedSwitches.length === count}
+									active={!ballsInPlay || currentModeStep?.name === name}
+									key={index}
+								>
 									<S.StepName>{name}</S.StepName>
 									<S.StepImages>
 										{switches.map((aSwitch, index) => {

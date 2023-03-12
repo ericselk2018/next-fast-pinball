@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import Slide from '../Slide/Slide.client';
 
 export const StyledSlide = styled(Slide)`
@@ -52,6 +52,8 @@ export const Step = styled.div(
 	display: flex;
 	align-items: center;
 	gap: 40px;
+	${complete ? 'color: lime;' : ''}
+	transition: opacity 3s, color 3s;
 `
 );
 
@@ -62,11 +64,35 @@ export const StepImages = styled.div`
 
 export const StepImage = styled.div(
 	({ complete }: { complete: boolean }) => `
+	position: relative;
+	overflow: hidden;
+	border-radius: 20px;
+
+	:after {
+		content: '\u2713';
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 80px;
+		font-weight: normal;
+		color: lime;
+		text-shadow: -1px 1px 0 black, 1px 1px 0 black, 1px -1px 0 black, -1px 1px 0 black;
+		-webkit-text-stroke: 1px black;
+		zoom: 2;
+		opacity: ${complete ? '1' : '0'};
+		transition: all 3s;
+		background-color: rgba(0,0,0,0.5);
+	}
 
 	img {
 		display: block;
 		width: 150px;
-		height: 150px;	
+		height: 150px;
 	}
 `
 );

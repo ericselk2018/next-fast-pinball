@@ -1,6 +1,6 @@
 // Only used while doing dev work - to force virtual hardware
 // TODO: set this with environment variable and npm run dev sets, npm run start does not
-export const useVirtualHardware = false;
+export const useVirtualHardware = true;
 
 // Only used while doing dev work - for game to start, normally set to 0.
 export const autoStartGamePlayers = 0;
