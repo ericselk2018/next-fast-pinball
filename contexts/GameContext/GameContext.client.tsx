@@ -18,6 +18,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import HardwareContext from '../HardwareContext/HardwareContext';
 import { autoStartBallsInPlay, totalBallsInMachine } from 'const/Setup/Setup';
 import AudioContext from 'contexts/AudioContext/AudioContext.client';
+import { KickerInfo } from 'const/Kickers/Kickers';
 
 interface CompletedTask {
 	step: string;
@@ -284,6 +285,18 @@ export const GameContextProvider = ({
 		}
 	}, [audio, ballEjecting, hardware, troughSlotsWithBallsSwitchIds]);
 
+	const kickBall = useCallback(
+		(args: { kicker: KickerInfo }) => {
+			const { kicker } = args;
+			hardware.kickBall({ kicker });
+		},
+		[hardware]
+	);
+
+	const modeComplete = useMemo(() => {
+		return !!ballsInPlay && !currentModeStep;
+	}, [ballsInPlay, currentModeStep]);
+
 	const context: Game = useMemo(
 		() => ({
 			saucerHolesWithBalls,
@@ -315,6 +328,8 @@ export const GameContextProvider = ({
 			},
 			ejectBall,
 			ballEjecting,
+			kickBall,
+			modeComplete,
 		}),
 		[
 			saucerHolesWithBalls,
@@ -331,6 +346,8 @@ export const GameContextProvider = ({
 			videoPlaying,
 			ejectBall,
 			ballEjecting,
+			kickBall,
+			modeComplete,
 		]
 	);
 

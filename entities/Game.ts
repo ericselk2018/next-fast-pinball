@@ -1,3 +1,4 @@
+import { KickerInfo } from 'const/Kickers/Kickers';
 import Mode from './Mode';
 import ModeStep from './ModeStep';
 import Player from './Player';
@@ -11,6 +12,7 @@ export default interface Game {
 	readonly ballsInPlay: number;
 	currentMode: Mode;
 	readonly currentModeStep: ModeStep | undefined;
+	readonly modeComplete: boolean;
 	readonly currentModeIndex: number;
 	readonly shots: ReadonlyArray<Shot>;
 	addShot: (shot: Shot) => void;
@@ -19,4 +21,5 @@ export default interface Game {
 	readonly saucerHolesWithBalls: ReadonlyArray<TargetSwitch>;
 	readonly ejectBall: () => void;
 	readonly ballEjecting: boolean;
+	readonly kickBall: (args: { kicker: KickerInfo }) => void;
 }

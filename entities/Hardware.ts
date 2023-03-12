@@ -1,3 +1,4 @@
+import { KickerInfo } from 'const/Kickers/Kickers';
 import { SwitchInfo, TargetSwitchInfo } from '../const/Switches/Switches';
 import Switch from './Switch';
 import TargetSwitch from './TargetSwitch';
@@ -14,4 +15,5 @@ export default interface Hardware {
 	}) => () => void;
 	readonly ejectBall: () => void;
 	readonly isSwitchClosed: (args: { switchInfo: SwitchInfo }) => boolean;
+	readonly kickBall: (args: { kicker: KickerInfo }) => void;
 }

@@ -13,11 +13,15 @@ export const Top = styled.div`
 	justify-content: center;
 `;
 
-export const Name = styled.div`
+export const Name = styled.div(
+	({ complete }: { complete: boolean }) => `
 	font-size: 100px;
 	text-align: center;
 	text-decoration: underline;
-`;
+	${complete ? 'color: lime;' : ''};
+	transition: color 3s;
+`
+);
 
 export const Bottom = styled.div`
 	display: flex;

@@ -195,12 +195,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const configureKicker = useCallback(
 		async (args: { kicker: KickerInfo }) => {
 			const { kicker } = args;
-			const { coil, switchInfo } = kicker;
+			const { coil } = kicker;
 
 			await fastWriter.coil.configurePulse({
 				coilId: coil.id,
-				switchId: switchInfo.id,
-				switchCondition: !switchInfo.normallyClosed,
 				pulsePowerPercent: 1,
 				pulseTimeInMilliseconds: 30,
 				restTimeInMilliseconds: 90,
@@ -483,13 +481,32 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		// Simulate the ball ejecting when using virtual hardware.
 		if (usingVirtualHardware) {
 			setTimeout(() => {
-				setSwitchClosed({ switchId: troughBallOneSwitch.id, closed: true });
+				setSwitchClosed({ switchId: troughBallOneSwitch.id, closed: !!troughBallOneSwitch.normallyClosed });
 				setTimeout(() => {
-					setSwitchClosed({ switchId: plungerRolloverSwitch.id, closed: false });
+					setSwitchClosed({
+						switchId: plungerRolloverSwitch.id,
+						closed: !!plungerRolloverSwitch.normallyClosed,
+					});
 				}, 1000);
 			}, 500);
 		}
 	}, [setSwitchClosed, tapCoil, usingVirtualHardware]);
+
+	const kickBall = useCallback(
+		(args: { kicker: KickerInfo }) => {
+			const { kicker } = args;
+			const { coil, switchInfo } = kicker;
+			tapCoil({ coil });
+
+			// Simulate the ball kick when using virtual hardware.
+			if (usingVirtualHardware) {
+				setTimeout(() => {
+					setSwitchClosed({ switchId: switchInfo.id, closed: !!switchInfo.normallyClosed });
+				}, 500);
+			}
+		},
+		[setSwitchClosed, tapCoil, usingVirtualHardware]
+	);
 
 	const isSwitchClosed = useCallback(
 		(args: { switchInfo: SwitchInfo }) => {
@@ -520,6 +537,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			addSwitchHandler,
 			ejectBall,
 			isSwitchClosed,
+			kickBall,
 		}),
 		[
 			addSwitchHandler,
@@ -529,6 +547,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			targetSwitchInfoToTargetSwitch,
 			ejectBall,
 			isSwitchClosed,
+			kickBall,
 		]
 	);
 

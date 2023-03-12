@@ -10,7 +10,7 @@ interface Props {
 }
 
 const ModeSlide = (props: Props) => {
-	const { ballsInPlay, currentModeStep } = useContext(GameContext);
+	const { ballsInPlay, currentModeStep, modeComplete } = useContext(GameContext);
 	const { active, mode } = props;
 	const { name, video, steps } = mode;
 	const videoElement = useRef<HTMLVideoElement>(null);
@@ -29,7 +29,7 @@ const ModeSlide = (props: Props) => {
 	return (
 		<S.StyledSlide active={active}>
 			<S.Top>
-				<S.Name>
+				<S.Name complete={modeComplete}>
 					<Blink blinking={!ballsInPlay} text={name} />
 				</S.Name>
 			</S.Top>

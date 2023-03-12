@@ -6,14 +6,17 @@ import { useContext, useEffect } from 'react';
 import GameStatus from '../GameStatus/GameStatus';
 import ModeSlide from '../Slides/ModeSlide/ModeSlide.client';
 import * as S from './GameController.styles';
-import { startButtonSwitch } from 'const/Switches/Switches';
+import { kickerSwitches, startButtonSwitch } from 'const/Switches/Switches';
+import { kickers } from 'const/Kickers/Kickers';
+import AudioContext from 'contexts/AudioContext/AudioContext.client';
 
 // StartController renders this after game is started.
 // We now have access to GameContext, and any components we render also can access it.
 const GameController = () => {
+	const audio = useContext(AudioContext);
 	const { enableFlippers, disableFlippers } = useContext(HardwareContext);
 	const game = useContext(GameContext);
-	const { ballsInPlay, modes, currentModeIndex, currentModeStep, ejectBall } = game;
+	const { ballsInPlay, modes, currentModeIndex, currentModeStep, ejectBall, kickBall } = game;
 	const incompleteSwitches = currentModeStep?.incompleteSwitches || [];
 
 	// Switch modes using flippers whenever no balls in play.
@@ -60,6 +63,24 @@ const GameController = () => {
 		},
 		[ejectBall],
 		startButtonSwitch
+	);
+
+	// Kick balls when they enter a kicker at the wrong time.
+	useSwitches(
+		(switchInfo) => {
+			const isTarget = currentModeStep?.switches.find((s) => s.id === switchInfo.id);
+			if (!isTarget) {
+				const kicker = kickers.find((kicker) => kicker.switchInfo.id === switchInfo.id);
+				if (kicker) {
+					audio.play({ name: 'crash' });
+					setTimeout(() => {
+						kickBall({ kicker });
+					}, 1000);
+				}
+			}
+		},
+		[currentModeStep?.switches, audio, kickBall],
+		kickerSwitches
 	);
 
 	return (
