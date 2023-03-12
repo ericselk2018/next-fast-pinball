@@ -56,9 +56,9 @@ Number of credits available (not spent).
 
 Number of balls moving on playfield, just a count.
 
-### Saucer Hole Balls (Game Context)
+### Kicker With Balls (Game Context)
 
-Switch id for each saucer hole switch that contains a ball.
+Switch id for each kicker that contains a ball.
 
 ### Hardware Error (Hardware Context)
 
@@ -216,7 +216,7 @@ Holds information about hardware, mostly from the FAST controller. Get from Hard
 
 #### Kicker
 
-I've heard them called a few names, including "Saucer Hole Kicker". In our game they are homes/garages/safe-houses. They hold the ball for a period of time, then kick it out. VPX calls them kickers, so I will too.
+I've heard them called a few names, including "Saucer Hole Kicker". In our game they are homes/garages/safe-houses. They hold the ball for a period of time, then kick it out. VPX calls them kickers, which is easy to spell and say, so I will too.
 
 #### Light
 

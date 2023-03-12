@@ -105,8 +105,8 @@ const GameController = () => {
 		) {
 			// Timeout is mostly for dramatic effect - suspense.
 			setTimeout(() => {
-				kickersWithBalls.forEach((saucerHolesWithBall) => {
-					const kicker = kickers.find((kicker) => kicker.switchInfo.id === saucerHolesWithBall.id);
+				kickersWithBalls.forEach((kickerWithBall) => {
+					const kicker = kickers.find((kicker) => kicker.switchInfo.id === kickerWithBall.id);
 					if (kicker) {
 						kickBall({ kicker });
 					}

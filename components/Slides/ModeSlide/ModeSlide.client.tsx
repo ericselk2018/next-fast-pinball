@@ -52,7 +52,7 @@ const ModeSlide = (props: Props) => {
 												(completedSwitch) => completedSwitch.id === id
 											);
 											const available = !kickersWithBalls.some(
-												(saucerHolesWithBall) => saucerHolesWithBall.id === id
+												(kickerWithBall) => kickerWithBall.id === id
 											);
 											return (
 												<S.StepImage key={index} complete={complete} available={available}>
