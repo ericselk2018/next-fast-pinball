@@ -1,5 +1,13 @@
 import FastWriter from './FastWriter';
 
+const toHex = (number: number) => {
+	const hex = number.toString(16).toUpperCase();
+	if (hex.length % 2) {
+		return '0' + hex;
+	}
+	return hex;
+};
+
 describe('FastWriter', () => {
 	describe('configureHardware', () => {
 		it('should write correct command', async () => {
@@ -7,7 +15,7 @@ describe('FastWriter', () => {
 			const hardwareModel = 1234;
 			await FastWriter({ write }).configureHardware({ hardwareModel });
 			expect(write).toBeCalledTimes(1);
-			expect(write).toBeCalledWith(`CH:${hardwareModel.toString(16)},1\r`);
+			expect(write).toBeCalledWith(`CH:${toHex(hardwareModel)},01\r`);
 		});
 	});
 	describe('getSwitchStates', () => {
@@ -24,7 +32,7 @@ describe('FastWriter', () => {
 			const timeoutInMilliseconds = 1234;
 			await FastWriter({ write }).setWatchdog({ timeoutInMilliseconds });
 			expect(write).toBeCalledTimes(1);
-			expect(write).toBeCalledWith(`WD:${timeoutInMilliseconds.toString(16)}\r`);
+			expect(write).toBeCalledWith(`WD:${toHex(timeoutInMilliseconds)}\r`);
 		});
 	});
 	describe('coil', () => {
@@ -52,13 +60,9 @@ describe('FastWriter', () => {
 				});
 				expect(write).toBeCalledTimes(1);
 				expect(write).toBeCalledWith(
-					`DL:${mainCoil.toString(16)},${triggerValue.toString(16)},${enterSwitch.toString(
-						16
-					)},75,${exitSwitch.toString(16)},${fullPowerTimeInMilliseconds.toString(
-						16
-					)},${partialPowerTimeInDeciseconds.toString(16)},${(partialPowerPercent * 255).toString(
-						16
-					)},${restTimeInMilliseconds.toString(16)}\r`
+					`DL:${toHex(mainCoil)},${toHex(triggerValue)},${toHex(enterSwitch)},75,${toHex(exitSwitch)},${toHex(
+						fullPowerTimeInMilliseconds
+					)},${toHex(partialPowerTimeInDeciseconds)},1F,${toHex(restTimeInMilliseconds)}\r`
 				);
 			});
 		});

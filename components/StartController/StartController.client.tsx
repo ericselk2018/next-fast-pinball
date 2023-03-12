@@ -32,14 +32,16 @@ const StartController = () => {
 	// Start game when start button hit, if enough credits.
 	useSwitch(
 		() => {
-			if (creditsNeeded > 0) {
-				audio.play({ name: 'crash' });
-			} else {
-				setGameStarted(true);
-				machine.credits -= creditsRequired;
+			if (!gameStarted) {
+				if (creditsNeeded > 0) {
+					audio.play({ name: 'crash' });
+				} else {
+					setGameStarted(true);
+					machine.credits -= creditsRequired;
+				}
 			}
 		},
-		[audio, creditsNeeded, creditsRequired, machine],
+		[audio, creditsNeeded, creditsRequired, machine, gameStarted],
 		startButtonSwitch
 	);
 

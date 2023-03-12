@@ -3,6 +3,7 @@ import Machine from '../../entities/Machine';
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 import AudioContext from '../AudioContext/AudioContext.client';
 import { useSwitch } from 'lib/switch/switch';
+import { startingCredits } from 'const/Setup/Setup';
 
 // This context wraps everything, so non-null assertion is pretty safe and keeps consumer code cleaner.
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -10,7 +11,7 @@ const MachineContext = createContext<Machine>(null!);
 
 export const MachineContextProvider = ({ children }: { children: ReactNode }) => {
 	const audio = useContext(AudioContext);
-	const [credits, setCredits] = useState(0);
+	const [credits, setCredits] = useState(startingCredits);
 
 	useSwitch(
 		() => {

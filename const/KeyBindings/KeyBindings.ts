@@ -7,7 +7,7 @@ export interface KeyBindingInfo {
 import {
 	coinSlotSwitch,
 	fourTargetGroupTopSwitch,
-	inlaneRolloverSwitch,
+	plungerRolloverSwitch,
 	leftFlipperButtonSwitch,
 	rightFlipperButtonSwitch,
 	selectButtonSwitch,
@@ -21,7 +21,7 @@ const keyBindings: ReadonlyArray<KeyBindingInfo> = [
 	{ key: 'c', switch: coinSlotSwitch },
 	{ key: 's', switch: startButtonSwitch },
 	{ key: 'Tab', switch: selectButtonSwitch },
-	{ key: 'i', switch: inlaneRolloverSwitch },
+	{ key: 'p', switch: plungerRolloverSwitch },
 	{ key: 'd', switch: fourTargetGroupTopSwitch },
 ];
 

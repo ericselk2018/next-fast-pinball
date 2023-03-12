@@ -1,4 +1,3 @@
-import { drainSwitch, inlaneRolloverSwitch } from '../../const/Switches/Switches';
 import GameContext from '../../contexts/GameContext/GameContext.client';
 import HardwareContext from '../../contexts/HardwareContext/HardwareContext';
 import TargetSwitch from '../../entities/TargetSwitch';
@@ -7,13 +6,14 @@ import { useContext, useEffect } from 'react';
 import GameStatus from '../GameStatus/GameStatus';
 import ModeSlide from '../Slides/ModeSlide/ModeSlide.client';
 import * as S from './GameController.styles';
+import { startButtonSwitch } from 'const/Switches/Switches';
 
 // StartController renders this after game is started.
 // We now have access to GameContext, and any components we render also can access it.
 const GameController = () => {
 	const { enableFlippers, disableFlippers } = useContext(HardwareContext);
 	const game = useContext(GameContext);
-	const { ballsInPlay, setBallsInPlay, modes, currentModeIndex, currentModeStep, currentPlayer, nextPlayer } = game;
+	const { ballsInPlay, modes, currentModeIndex, currentModeStep, ejectBall } = game;
 	const incompleteSwitches = currentModeStep?.incompleteSwitches || [];
 
 	// Switch modes using flippers whenever no balls in play.
@@ -44,30 +44,6 @@ const GameController = () => {
 		}
 	}, [ballsInPlay, disableFlippers, enableFlippers]);
 
-	// Increase balls in play when inlane switch triggers.
-	useSwitch(
-		() => {
-			setBallsInPlay((ballsInPlay) => ballsInPlay + 1);
-			currentPlayer.usedBalls = currentPlayer.usedBalls + 1;
-		},
-		[currentPlayer, setBallsInPlay],
-		inlaneRolloverSwitch
-	);
-
-	// Decrease balls when drain switch is hit.
-	useSwitch(
-		() => {
-			setBallsInPlay((ballsInPlay) => ballsInPlay - 1);
-			if (ballsInPlay === 1) {
-				game.currentPlayer = nextPlayer;
-			}
-		},
-		[ballsInPlay, game, nextPlayer, setBallsInPlay],
-		drainSwitch
-	);
-
-	console.log({ ballsInPlay });
-
 	// When a switch in the current step is hit, mark as complete.
 	useSwitches(
 		(switchInfo: TargetSwitch) => {
@@ -75,6 +51,15 @@ const GameController = () => {
 		},
 		[currentModeStep],
 		incompleteSwitches
+	);
+
+	// Eject ball using start button while no balls in play.
+	useSwitch(
+		() => {
+			ejectBall();
+		},
+		[ejectBall],
+		startButtonSwitch
 	);
 
 	return (

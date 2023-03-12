@@ -17,7 +17,7 @@ export const rightFlipperMainCoil: CoilInfo = { name: 'Right Flipper', id: id(2)
 export const rightFlipperHoldCoil: CoilInfo = { name: 'Right Flipper Hold', id: id(3) };
 export const leftSlingshotCoil: CoilInfo = { name: 'Left Slingshot', id: id(4) };
 export const rightSlingshotCoil: CoilInfo = { name: 'Right Slingshot', id: id(5) };
-export const troughBallEject: CoilInfo = { name: 'Trough Ball Eject', id: id(6) };
+export const troughBallEjectCoil: CoilInfo = { name: 'Trough Ball Eject', id: id(6) };
 
 id = (pin: PinNumber) => coilId({ board: upperThirdNodeBoard, header: 0, pin });
 export const rightKickerCoil: CoilInfo = { name: 'Right Kicker', id: id(0) };

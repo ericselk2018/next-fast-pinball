@@ -9,7 +9,6 @@ export default interface Game {
 	currentPlayer: Player;
 	readonly nextPlayer: Player;
 	readonly ballsInPlay: number;
-	readonly setBallsInPlay: (setter: (previousValue: number) => number) => void;
 	currentMode: Mode;
 	readonly currentModeStep: ModeStep | undefined;
 	readonly currentModeIndex: number;
@@ -18,4 +17,6 @@ export default interface Game {
 	videoPlaying: string;
 	readonly modes: ReadonlyArray<Mode>;
 	readonly saucerHolesWithBalls: ReadonlyArray<TargetSwitch>;
+	readonly ejectBall: () => void;
+	readonly ballEjecting: boolean;
 }

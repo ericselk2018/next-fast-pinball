@@ -47,6 +47,22 @@ const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 	};
 
 	const coil = (() => {
+		const triggerFlags = {
+			enable: 0b1,
+			notUsed1: 0b10,
+			notUsed2: 0b100,
+			oneShot: 0b1000,
+			invertSwitchOne: 0b10000,
+			invertSwitchTwo: 0b100000,
+			manual: 0b1000000,
+			disableSwitch: 0b10000000,
+		};
+		const modes = {
+			pulse: 0x10,
+			pulseAndHold: 0x18,
+			pulseWithCancelSwitch: 0x75,
+		};
+
 		const configureAutoTriggeredDiverter = async (args: {
 			coilId: number;
 			enterSwitchId: number;
@@ -69,16 +85,10 @@ const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 			} = args;
 			const { enterSwitchCondition, exitSwitchCondition } = trigger;
 			const triggerValue =
-				enterSwitchCondition && exitSwitchCondition
-					? 0x01
-					: !enterSwitchCondition && exitSwitchCondition
-					? 0x11
-					: enterSwitchCondition && !exitSwitchCondition
-					? 0x21
-					: // !enterSwitchCondition && !exitSwitchCondition
-					  0x31;
-
-			const coilMode = 0x75;
+				triggerFlags.enable |
+				(enterSwitchCondition ? 0 : triggerFlags.invertSwitchOne) |
+				(exitSwitchCondition ? 0 : triggerFlags.invertSwitchTwo);
+			const coilMode = modes.pulseWithCancelSwitch;
 			await writeCommand(
 				'DL',
 				coilId,
@@ -111,8 +121,8 @@ const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 				switchId,
 				restTimeInMilliseconds,
 			} = args;
-			const triggerValue = switchCondition ? 0x01 : 0x11;
-			const coilMode = 0x18;
+			const triggerValue = triggerFlags.enable | (switchCondition ? 0 : triggerFlags.invertSwitchOne);
+			const coilMode = modes.pulseAndHold;
 			await writeCommand(
 				'DL',
 				coilId,
@@ -139,8 +149,8 @@ const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 
 		const configurePulse = async (args: {
 			coilId: number;
-			switchId: number;
-			switchCondition: boolean;
+			switchId?: number;
+			switchCondition?: boolean;
 			pulsePowerPercent: number;
 			pulseTimeInMilliseconds: number;
 			restTimeInMilliseconds: number;
@@ -153,12 +163,19 @@ const FastWriter = (args: { write: (text: string) => Promise<void> }) => {
 				switchCondition,
 				switchId,
 			} = args;
-			const coilMode = 0x10;
+			const coilMode = modes.pulse;
+			const triggerValue =
+				triggerFlags.enable |
+				(switchId === undefined
+					? triggerFlags.disableSwitch
+					: switchCondition
+					? 0
+					: triggerFlags.invertSwitchOne);
 			await writeCommand(
 				'DL',
 				coilId,
-				switchCondition ? 0x01 : 0x11,
-				switchId,
+				triggerValue,
+				switchId || 0,
 				coilMode,
 				pulseTimeInMilliseconds,
 				percentToByteValue(pulsePowerPercent),

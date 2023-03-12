@@ -12,4 +12,6 @@ export default interface Hardware {
 		onHit?: (switchInfo: SwitchInfo) => void;
 		onToggle?: (args: { switchInfo: SwitchInfo; closed: boolean }) => void;
 	}) => () => void;
+	readonly ejectBall: () => void;
+	readonly isSwitchClosed: (args: { switchInfo: SwitchInfo }) => boolean;
 }

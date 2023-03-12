@@ -4,6 +4,7 @@ import {
 	leftFlipperMainCoil,
 	rightFlipperHoldCoil,
 	rightFlipperMainCoil,
+	troughBallEjectCoil,
 } from '../../const/Coils/Coils';
 import flippers, { FlipperInfo } from '../../const/Flippers/Flippers';
 import keyBindings from '../../const/KeyBindings/KeyBindings';
@@ -14,7 +15,13 @@ import TargetSwitch from '../../entities/TargetSwitch';
 import FastWriter from '../../lib/FastWriter/FastWriter';
 import { bitTest } from '../../lib/math/math';
 import { createContext, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import switches, { SwitchInfo, TargetSwitchInfo } from '../../const/Switches/Switches';
+import switches, {
+	plungerRolloverSwitch,
+	SwitchInfo,
+	TargetSwitchInfo,
+	troughBallOneSwitch,
+	virtualClosedAtStartSwitches,
+} from '../../const/Switches/Switches';
 import { SlingshotInfo, slingshots } from 'const/Slingshots/Slingshots';
 import { KickerInfo, kickers } from 'const/Kickers/Kickers';
 import { BumperInfo, bumpers } from 'const/Bumpers/Bumpers';
@@ -40,7 +47,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const [permissionRequired, setPermissionRequired] = useState(false);
 	const [usingVirtualHardware, setUsingVirtualHardware] = useState(useVirtualHardware);
 	const [bootDone, setBootDone] = useState(usingVirtualHardware);
-	const [switchesOpen, setSwitchesOpen] = useState(
+	const [switchesClosed, setSwitchesClosed] = useState(
 		Array<boolean>(Math.max(...switches.map((aSwitch) => aSwitch.id))).fill(false)
 	);
 	const switchHitEventHandlers = useRef<SwitchHitEventHandler[]>([]);
@@ -53,7 +60,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				const writer = portWriter.current;
 				if (writer) {
 					if (!text.startsWith('WD:')) {
-						console.log('write', { text });
+						console.log('write', text);
 					}
 					await writer.write(new TextEncoder().encode(text));
 				}
@@ -83,7 +90,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					if (hit) {
 						handler.onHit?.(switchInfo);
 					}
-					handler.onToggle?.({ switchInfo, closed });
+					handler.onToggle?.({ switchInfo, closed: normallyClosed ? !closed : closed });
 				})
 		);
 	}, []);
@@ -93,6 +100,16 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			const { enable, coil } = args;
 			(async () => {
 				await fastWriter.coil.modifyTrigger({ coilId: coil.id, control: enable ? 'auto' : 'off' });
+			})();
+		},
+		[fastWriter.coil]
+	);
+
+	const tapCoil = useCallback(
+		(args: { coil: CoilInfo }) => {
+			const { coil } = args;
+			(async () => {
+				await fastWriter.coil.modifyTrigger({ coilId: coil.id, control: 'tap' });
 			})();
 		},
 		[fastWriter.coil]
@@ -125,7 +142,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			// Configure Main Coil
 			await fastWriter.coil.configureAutoTriggeredDiverter({
 				coilId: mainCoil.id,
-				trigger: { enterSwitchCondition: true, exitSwitchCondition: true },
+				trigger: {
+					enterSwitchCondition: !buttonSwitch.normallyClosed,
+					exitSwitchCondition: !endOfStrokeSwitch.normallyClosed,
+				},
 				enterSwitchId: buttonSwitch.id,
 				exitSwitchId: endOfStrokeSwitch.id,
 				fullPowerTimeInMilliseconds: 30,
@@ -143,7 +163,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				kickTimeInMilliseconds: 10,
 				latchPowerPercent: 1,
 				restTimeInMilliseconds: 90,
-				switchCondition: true,
+				switchCondition: !buttonSwitch.normallyClosed,
 				switchId: buttonSwitch.id,
 			});
 		},
@@ -158,7 +178,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			await fastWriter.coil.configurePulse({
 				coilId: coil.id,
 				switchId: switchInfo.id,
-				switchCondition: true,
+				switchCondition: !switchInfo.normallyClosed,
 				pulsePowerPercent: 1,
 				pulseTimeInMilliseconds: 30,
 				restTimeInMilliseconds: 90,
@@ -175,7 +195,21 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			await fastWriter.coil.configurePulse({
 				coilId: coil.id,
 				switchId: switchInfo.id,
-				switchCondition: true,
+				switchCondition: !switchInfo.normallyClosed,
+				pulsePowerPercent: 1,
+				pulseTimeInMilliseconds: 30,
+				restTimeInMilliseconds: 90,
+			});
+		},
+		[fastWriter.coil]
+	);
+
+	const configureManualCoil = useCallback(
+		async (args: { coil: CoilInfo }) => {
+			const { coil } = args;
+
+			await fastWriter.coil.configurePulse({
+				coilId: coil.id,
 				pulsePowerPercent: 1,
 				pulseTimeInMilliseconds: 30,
 				restTimeInMilliseconds: 90,
@@ -192,13 +226,29 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			await fastWriter.coil.configurePulse({
 				coilId: coil.id,
 				switchId: switchInfo.id,
-				switchCondition: true,
+				switchCondition: !switchInfo.normallyClosed,
 				pulsePowerPercent: 1,
 				pulseTimeInMilliseconds: 30,
 				restTimeInMilliseconds: 90,
 			});
 		},
 		[fastWriter.coil]
+	);
+
+	const setSwitchClosed = useCallback(
+		(args: { switchId: number; closed: boolean }) => {
+			const { switchId, closed } = args;
+			setSwitchesClosed((switchesClosed) =>
+				switchesClosed.map((wasClosed, id) => (id === switchId ? closed : wasClosed))
+			);
+			const switchInfo = switches.find((aSwitch) => aSwitch.id === switchId);
+			if (switchInfo) {
+				notifySwitchHitEventHandlers({ switchInfo, closed });
+			} else {
+				console.error(`you need to add switch ID ${switchId} to Switches.switches`);
+			}
+		},
+		[notifySwitchHitEventHandlers]
 	);
 
 	const open = useCallback(
@@ -214,33 +264,30 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 								if (index === lines.length - 1) {
 									received.current = line;
 								} else {
+									if (!line.startsWith('WD:P')) {
+										console.log('read', line);
+									}
 									if (line.startsWith('SA:0E,')) {
 										const switchData = line.substring('SA:0E,'.length);
-										const getOpen = (id: number) => {
-											const byteIndex = id / 8;
+										const getClosed = (id: number) => {
+											const byteIndex = Math.floor(id / 8);
 											const byteValue = parseInt(
-												switchData.substring(byteIndex * 2, byteIndex * 2 + 1),
+												switchData.substring(byteIndex * 2, byteIndex * 2 + 2),
 												16
 											);
 											return bitTest(byteValue, id % 8);
 										};
-										setSwitchesOpen(switchesOpen.map((_, id) => getOpen(id)));
+										const initialSwitchesClosed = switchesClosed.map((_, id) => getClosed(id));
+										setSwitchesClosed(initialSwitchesClosed);
+										console.log({
+											initialSwitchesClosed: switches
+												.filter((switchInfo) => initialSwitchesClosed[switchInfo.id])
+												.map((switchInfo) => switchInfo.name),
+										});
 									} else if (line.startsWith('/L:') || line.startsWith('-L:')) {
-										const isOpenNow = line[0] === '/';
-										const switchChangedId = parseInt(line.substring('/L:'.length), 16);
-										setSwitchesOpen((switchesOpen) =>
-											switchesOpen.map((wasOpen, switchId) =>
-												switchId === switchChangedId ? isOpenNow : wasOpen
-											)
-										);
-										const switchInfo = switches.find((aSwitch) => aSwitch.id === switchChangedId);
-										if (switchInfo) {
-											notifySwitchHitEventHandlers({ switchInfo, closed: !isOpenNow });
-										} else {
-											console.error(
-												`you need to add switch ID ${switchChangedId} to Switches.switches`
-											);
-										}
+										const closed = line[0] === '-';
+										const switchId = parseInt(line.substring('/L:'.length), 16);
+										setSwitchClosed({ switchId, closed });
 									}
 								}
 							});
@@ -269,6 +316,8 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					await configureBumper({ bumper });
 				}
 
+				configureManualCoil({ coil: troughBallEjectCoil });
+
 				disableFlippers();
 			} catch (reason: unknown) {
 				// dangerous as cast, need to read more about TypeScript specific exception handling
@@ -276,14 +325,15 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			}
 		},
 		[
-			fastWriter,
-			disableFlippers,
-			switchesOpen,
-			notifySwitchHitEventHandlers,
-			configureFlipper,
-			configureSlingshot,
-			configureKicker,
 			configureBumper,
+			configureFlipper,
+			configureKicker,
+			configureManualCoil,
+			configureSlingshot,
+			disableFlippers,
+			fastWriter,
+			setSwitchClosed,
+			switchesClosed,
 		]
 	);
 
@@ -348,15 +398,17 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				if (keyBinding) {
 					const { switch: switchInfo } = keyBinding;
 					event.preventDefault();
-					setSwitchesOpen((switchesOpen) =>
-						switchesOpen.map((open, id) => (id === switchInfo.id ? !down : open))
+					setSwitchesClosed((switchesClosed) =>
+						switchesClosed.map((closed, id) => (id === switchInfo.id ? down : closed))
 					);
 
 					notifySwitchHitEventHandlers({ switchInfo, closed: down });
 				}
 			};
 			const handleKeyDown = (event: KeyboardEvent) => {
-				handleKeyUpOrDown({ event, down: true });
+				if (!event.repeat) {
+					handleKeyUpOrDown({ event, down: true });
+				}
 			};
 			const handleKeyUp = (event: KeyboardEvent) => {
 				handleKeyUpOrDown({ event, down: false });
@@ -390,10 +442,10 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				},
 				name,
 				id: id,
-				open: switchesOpen[id],
+				closed: switchesClosed[id],
 			};
 		},
-		[addSwitchHitEventHandler, switchesOpen]
+		[addSwitchHitEventHandler, switchesClosed]
 	);
 
 	const targetSwitchInfoToTargetSwitch = useCallback(
@@ -420,6 +472,40 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 		[addSwitchHitEventHandler]
 	);
 
+	const ejectBall = useCallback(() => {
+		tapCoil({ coil: troughBallEjectCoil });
+
+		// Simulate the ball ejecting when using virtual hardware.
+		if (usingVirtualHardware) {
+			setTimeout(() => {
+				setSwitchClosed({ switchId: troughBallOneSwitch.id, closed: true });
+				setTimeout(() => {
+					setSwitchClosed({ switchId: plungerRolloverSwitch.id, closed: false });
+				}, 1000);
+			}, 500);
+		}
+	}, [setSwitchClosed, tapCoil, usingVirtualHardware]);
+
+	const isSwitchClosed = useCallback(
+		(args: { switchInfo: SwitchInfo }) => {
+			const { switchInfo } = args;
+			const { id } = switchInfo;
+			return switchInfo.normallyClosed ? !switchesClosed[id] : switchesClosed[id];
+		},
+		[switchesClosed]
+	);
+
+	// Keep some global variables updated for debug purposes, so we can inspect them in browser console easily.
+	useEffect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		(global as any).hardware = {
+			switchesClosed,
+			closedSwitches: switches
+				.filter((switchInfo) => isSwitchClosed({ switchInfo }))
+				.map((switchInfo) => switchInfo.name),
+		};
+	}, [isSwitchClosed, switchesClosed]);
+
 	const context: Hardware = useMemo(
 		() => ({
 			switchInfoToSwitch,
@@ -427,8 +513,18 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			enableFlippers,
 			disableFlippers,
 			addSwitchHandler,
+			ejectBall,
+			isSwitchClosed,
 		}),
-		[addSwitchHandler, disableFlippers, enableFlippers, switchInfoToSwitch, targetSwitchInfoToTargetSwitch]
+		[
+			addSwitchHandler,
+			disableFlippers,
+			enableFlippers,
+			switchInfoToSwitch,
+			targetSwitchInfoToTargetSwitch,
+			ejectBall,
+			isSwitchClosed,
+		]
 	);
 
 	if (lastError) {
@@ -450,6 +546,11 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 	const handleUseVirtualHardwareClick = () => {
 		setUsingVirtualHardware(true);
 		setPermissionRequired(false);
+		setSwitchesClosed((switchesClosed) =>
+			switchesClosed.map(
+				(_, switchId) => !!virtualClosedAtStartSwitches.find((switchInfo) => switchInfo.id === switchId)
+			)
+		);
 	};
 
 	if (permissionRequired) {
