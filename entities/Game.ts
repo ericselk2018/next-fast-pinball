@@ -1,4 +1,4 @@
-import { KickerInfo } from 'const/Kickers/Kickers';
+import { CompletedTask } from 'contexts/GameContext/GameContext.client';
 import Mode from './Mode';
 import ModeStep from './ModeStep';
 import Player from './Player';
@@ -19,8 +19,6 @@ export default interface Game {
 	videoPlaying: string;
 	readonly modes: ReadonlyArray<Mode>;
 	readonly kickersWithBalls: ReadonlyArray<TargetSwitch>;
-	readonly ejectBall: () => void;
-	readonly ballEjecting: boolean;
-	readonly kickBall: (args: { kicker: KickerInfo }) => void;
-	readonly ballsInPlayUpdatePending: boolean;
+	readonly waitingForLaunch: boolean;
+	readonly tasksCompleted: ReadonlyArray<CompletedTask>;
 }

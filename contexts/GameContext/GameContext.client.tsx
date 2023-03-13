@@ -1,11 +1,11 @@
 import modes, { ModeInfo, ModeStepInfo } from '../../const/Modes/Modes';
 import { clearProgressWhenNoBallsInPlay, startingBallsPerPlayer, startingScore } from '../../const/Rules/Rules';
 import {
-	plungerRolloverSwitch,
 	kickerSwitches,
 	troughSwitches,
 	troughBallOneSwitch,
 	SwitchInfo,
+	plungerRolloverSwitch,
 } from '../../const/Switches/Switches';
 import Game from '../../entities/Game';
 import Mode from '../../entities/Mode';
@@ -18,9 +18,10 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import HardwareContext from '../HardwareContext/HardwareContext';
 import { autoStartBallsInPlay, totalBallsInMachine } from 'const/Setup/Setup';
 import AudioContext from 'contexts/AudioContext/AudioContext.client';
-import { KickerInfo } from 'const/Kickers/Kickers';
+import { KickerInfo, kickers } from 'const/Kickers/Kickers';
+import { useEffectWithPreviousValue } from 'lib/react/react';
 
-interface CompletedTask {
+export interface CompletedTask {
 	step: string;
 	switchId: number;
 }
@@ -57,10 +58,7 @@ export const GameContextProvider = ({
 	const [troughSlotsWithBallsSwitchIds, setTroughSlotsWithBallsSwitchIds] = useState<number[]>(
 		alreadyClosedSwitchIds({ switches: troughSwitches })
 	);
-	const [ballEjecting, setBallEjecting] = useState(false);
 	const [ballsInPlay, setBallsInPlay] = useState(autoStartBallsInPlay);
-	const [maybeKicking, setMaybeKicking] = useState(false);
-	const [ballsInPlayUpdatePending, setBallsInPlayUpdatePending] = useState(false);
 
 	// Keep some global variables updated for debug purposes, so we can inspect them in browser console easily.
 	useEffect(() => {
@@ -75,9 +73,8 @@ export const GameContextProvider = ({
 				.filter((switchInfo) => troughSlotsWithBallsSwitchIds.includes(switchInfo.id))
 				.map((switchInfo) => switchInfo.name),
 			ballsInPlay,
-			ballEjecting,
 		};
-	}, [kickersWithBallsSwitchIds, troughSlotsWithBallsSwitchIds, ballsInPlay, ballEjecting]);
+	}, [kickersWithBallsSwitchIds, troughSlotsWithBallsSwitchIds, ballsInPlay]);
 
 	const modeStepInfoToModeStep = useCallback(
 		(modeStepInfo: ModeStepInfo): ModeStep => {
@@ -192,38 +189,87 @@ export const GameContextProvider = ({
 		).map(targetSwitchInfoToTargetSwitch);
 	}, [kickersWithBallsSwitchIds, targetSwitchInfoToTargetSwitch]);
 
-	// Clear ball ejecting state when plunger rollover is hit.
-	useSwitch(
-		() => {
-			if (ballEjecting) {
-				setBallEjecting(false);
-				audio.play({ name: 'rev' });
-			}
+	const kickBall = useCallback(
+		(args: { kicker: KickerInfo }) => {
+			const { kicker } = args;
+			hardware.kickBall({ kicker });
 		},
-		[audio, ballEjecting],
-		plungerRolloverSwitch
+		[hardware]
 	);
 
-	// Keep track of balls in holes.
-	useToggleSwitches(
-		({ closed, switchInfo }) => {
-			const { id } = switchInfo;
-			setKickersWithBallsSwitchIds((kickersWithBallsSwitchIds) => {
-				if (closed) {
-					if (kickersWithBallsSwitchIds.includes(id)) {
-						return kickersWithBallsSwitchIds;
-					}
-					return [...kickersWithBallsSwitchIds, id];
-				} else {
-					return kickersWithBallsSwitchIds.filter((n) => n !== id);
+	// Kick all balls out of kickers when no balls in play and all balls are in kickers, or all kickers have balls.
+	// Start multi-ball.
+	useEffect(() => {
+		if (
+			(!ballsInPlay && kickersWithBalls.length === kickerSwitches.length) ||
+			kickersWithBalls.length === totalBallsInMachine
+		) {
+			kickersWithBalls.forEach((kickersWithBall) => {
+				const kicker = kickers.find((kicker) => kicker.switchInfo.id === kickersWithBall.id);
+				if (kicker) {
+					kickBall({ kicker });
 				}
 			});
+		}
+	}, [ballsInPlay, kickBall, kickersWithBalls]);
+
+	// Apply logic when balls enter or exit kickers.
+	useToggleSwitches(
+		({ closed: hasBall, switchInfo }) => {
+			const { id } = switchInfo;
+			setKickersWithBallsSwitchIds((kickersWithBallsSwitchIds) => {
+				const hadBall = kickersWithBallsSwitchIds.includes(id);
+				const isTarget = !!currentModeStep?.switches.some((switchInfo) => switchInfo.id === id);
+
+				// If the state did not actually change, ignore the toggle.
+				if (hasBall === hadBall) {
+					return kickersWithBallsSwitchIds;
+				}
+
+				// If a balls go in a hole that isn't a target, we just kick it out.
+				if (hasBall && !isTarget) {
+					const kicker = kickers.find((kicker) => kicker.switchInfo.id === id);
+					if (kicker) {
+						audio.play({ name: 'crash' });
+						setTimeout(() => {
+							kickBall({ kicker });
+						}, 1000);
+					}
+					return kickersWithBallsSwitchIds;
+				}
+
+				// If a ball went in a target, it will be held, add to list.
+				if (hasBall && isTarget) {
+					return [...kickersWithBallsSwitchIds, id];
+				}
+
+				// If we get here, the ball left the kicker, remove from list.
+				return kickersWithBallsSwitchIds.filter((n) => n !== id);
+			});
 		},
-		[],
+		[audio, currentModeStep?.switches, kickBall],
 		kickerSwitches
 	);
 
+	// Update balls in play value whenever balls enter or exit kickers.
+	useEffectWithPreviousValue(
+		(previousKickersWithBallsSwitchIdsLength) => {
+			const difference = kickersWithBallsSwitchIds.length - previousKickersWithBallsSwitchIdsLength;
+			if (difference) {
+				setBallsInPlay((ballsInPlay) => {
+					console.log(
+						`balls in holes changed by ${difference}, setting balls in play to ${ballsInPlay - difference}`
+					);
+					return ballsInPlay - difference;
+				});
+			}
+		},
+		[kickersWithBallsSwitchIds.length],
+		kickersWithBallsSwitchIds.length
+	);
+
 	// Keep track of balls in trough.
+	// REVIEW: Currently we only actually care about ball slot one, so we should just track that if nothing else used.
 	useToggleSwitches(
 		({ closed, switchInfo }) => {
 			const { id } = switchInfo;
@@ -242,47 +288,19 @@ export const GameContextProvider = ({
 		troughSwitches
 	);
 
-	// Keep our balls in play count updated.
-	// Uses a 1 second delay to avoid the count changing in these scenarios:
-	//  While balls are rolling down the trough and toggling switches on/off.
-	// Also never updates the count while a ball is ejecting.
-	useEffect(() => {
-		if (!ballEjecting && !maybeKicking) {
-			setBallsInPlayUpdatePending(true);
-			const timeout = setTimeout(() => {
-				setBallsInPlayUpdatePending(false);
-				const currentBallsInPlay =
-					totalBallsInMachine - (troughSlotsWithBallsSwitchIds.length + kickersWithBallsSwitchIds.length);
-				if (currentBallsInPlay !== ballsInPlay) {
-					setBallsInPlay(currentBallsInPlay);
-				}
-			}, 1000);
-			return () => clearTimeout(timeout);
-		}
-	}, [
-		ballEjecting,
-		ballsInPlay,
-		kickersWithBallsSwitchIds.length,
-		maybeKicking,
-		troughSlotsWithBallsSwitchIds.length,
-	]);
-
-	// Whenever balls land in kickers we set a flag that auto clears after a set period, so that we will not
-	//  update balls in play count until we know for sure that it will not be kicked back in to play.
-	useEffect(() => {
-		setMaybeKicking(true);
-		const timeout = setTimeout(
-			() => {
-				setMaybeKicking(false);
-			},
-			// TODO: remove magic numbers used for various timers
-			2000
-		);
-		return () => {
-			clearTimeout(timeout);
-			setMaybeKicking(false);
-		};
-	}, [kickersWithBallsSwitchIds]);
+	// Anytime the last/highest trough switch is hit, a ball drained.
+	// PLAY-TEST: Can a ball ever go backwards in the trough?  If so, this logic will not work.
+	// PLAY-TEST: Can two balls ever pass over this switch fast enough that it doesn't toggle in between?  If so, this logic will not work.
+	useSwitch(
+		() => {
+			setBallsInPlay((ballsInPlay) => {
+				console.log(`ball drained, setting balls in play to ${ballsInPlay - 1}`);
+				return ballsInPlay - 1;
+			});
+		},
+		[],
+		troughSwitches[troughSwitches.length - 1]
+	);
 
 	const modeComplete = useMemo(() => {
 		return !!ballsInPlay && !currentModeStep;
@@ -295,45 +313,28 @@ export const GameContextProvider = ({
 		}
 	}, [ballsInPlay, currentModeStep]);
 
-	// Clear ball ejecting state if it lasts longer than 3 seconds.
-	// This happens if the ball fails to eject.
-	// If jam switch is open (ball present), the next eject will possibly launch both balls.
-	// Since we count the jam switch as a ball in the trough, our count should still be accurate,
-	//  but the player will get a free multiball - I guess this is okay, a gift for machine failure?
-	// REVIEW: We could add logic to disable everything and require player to just plung + drain the balls
-	//  until the jam is cleared, without it impacting scores or game state in any way.
-	//  Or maybe game pauses until tech support clears the condition manually - could stuff break?
+	// Eject ball whenever no balls in play, and one is ready to eject.
 	useEffect(() => {
-		if (ballEjecting) {
-			const timeout = setTimeout(() => {
-				setBallEjecting(false);
-				audio.play({ name: 'crash' });
+		setBallsInPlay((ballsInPlay) => {
+			if (!ballsInPlay && troughSlotsWithBallsSwitchIds.includes(troughBallOneSwitch.id)) {
+				setCurrentPlayerIndex(players.indexOf(nextPlayer));
+				hardware.ejectBall();
+				audio.play({ name: 'shot' });
+				console.log(`ball ejected, setting balls in play to ${ballsInPlay + 1}`);
+				return ballsInPlay + 1;
+			}
+			console.log(`ball not ejected, leaving balls in play at ${ballsInPlay}`);
+			return ballsInPlay;
+		});
+	}, [audio, hardware, nextPlayer, players, troughSlotsWithBallsSwitchIds]);
 
-				// ANALYTICS: This would be a good data point to track, to know when maintenance is needed.
-			}, 3000);
-			return () => clearTimeout(timeout);
-		}
-	}, [audio, ballEjecting]);
-
-	const ejectBall = useCallback(() => {
-		// Only allow ball eject if not already ejecting, and we have a ball in slot one.
-		if (!ballEjecting && troughSlotsWithBallsSwitchIds.includes(troughBallOneSwitch.id)) {
-			hardware.ejectBall();
-			audio.play({ name: 'shot' });
-			setBallEjecting(true);
-		}
-	}, [audio, ballEjecting, hardware, troughSlotsWithBallsSwitchIds]);
-
-	const kickBall = useCallback(
-		(args: { kicker: KickerInfo }) => {
-			const { kicker } = args;
-			hardware.kickBall({ kicker });
-		},
-		[hardware]
-	);
+	const waitingForLaunch = useMemo(() => {
+		return !ballsInPlay || (ballsInPlay === 1 && isSwitchClosed({ switchInfo: plungerRolloverSwitch }));
+	}, [ballsInPlay, isSwitchClosed]);
 
 	const context: Game = useMemo(
 		() => ({
+			waitingForLaunch,
 			kickersWithBalls,
 			modes: modes.map(modeInfoToMode),
 			ballsInPlay,
@@ -361,30 +362,27 @@ export const GameContextProvider = ({
 			set videoPlaying(video: string) {
 				setVideoPlaying(video);
 			},
-			ejectBall,
-			ballEjecting,
 			kickBall,
 			modeComplete,
-			ballsInPlayUpdatePending,
+			tasksCompleted,
 		}),
 		[
-			kickersWithBalls,
-			modeInfoToMode,
-			ballsInPlay,
-			currentModeStep,
-			currentModeIndex,
-			players,
-			nextPlayer,
-			shots,
+			waitingForLaunch,
 			addShot,
+			ballsInPlay,
 			currentMode,
+			currentModeIndex,
+			currentModeStep,
 			currentPlayer,
-			videoPlaying,
-			ejectBall,
-			ballEjecting,
 			kickBall,
+			kickersWithBalls,
 			modeComplete,
-			ballsInPlayUpdatePending,
+			modeInfoToMode,
+			nextPlayer,
+			players,
+			shots,
+			videoPlaying,
+			tasksCompleted,
 		]
 	);
 

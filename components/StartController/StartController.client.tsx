@@ -11,6 +11,7 @@ import AudioContext from '../../contexts/AudioContext/AudioContext.client';
 import { useFlippers, useSwitch } from '../../lib/switch/switch';
 import { replaceItemAtIndex } from '../../lib/array/array';
 import { changeLetterAt } from '../../lib/string/string';
+import DebugView from 'components/DebugView/DebugView.client';
 
 // This controller handles state and logic for starting a game, including:
 //  Displays slide to attract players.
@@ -108,6 +109,7 @@ const StartController = () => {
 	return gameStarted ? (
 		<GameContextProvider playerInitials={playerInitials}>
 			<GameController />
+			<DebugView />
 		</GameContextProvider>
 	) : (
 		<AttractSlide

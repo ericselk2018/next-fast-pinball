@@ -10,7 +10,7 @@ interface Props {
 }
 
 const ModeSlide = (props: Props) => {
-	const { ballsInPlay, currentModeStep, modeComplete, kickersWithBalls } = useContext(GameContext);
+	const { ballsInPlay, waitingForLaunch, currentModeStep, modeComplete, kickersWithBalls } = useContext(GameContext);
 	const { active, mode } = props;
 	const { name, video, steps } = mode;
 	const videoElement = useRef<HTMLVideoElement>(null);
@@ -30,7 +30,7 @@ const ModeSlide = (props: Props) => {
 		<S.StyledSlide active={active}>
 			<S.Top>
 				<S.Name complete={modeComplete}>
-					<Blink blinking={!ballsInPlay} text={name} />
+					<Blink blinking={waitingForLaunch} text={name} />
 				</S.Name>
 			</S.Top>
 			<S.Bottom>
@@ -41,7 +41,7 @@ const ModeSlide = (props: Props) => {
 							return (
 								<S.Step
 									complete={completedSwitches.length === count}
-									active={!ballsInPlay || currentModeStep?.name === name}
+									active={(ballsInPlay && !waitingForLaunch) || currentModeStep?.name === name}
 									key={index}
 								>
 									<S.StepName>{name}</S.StepName>
