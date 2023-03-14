@@ -1,20 +1,20 @@
 import { DependencyList, useCallback, useEffect, useRef } from 'react';
 
 interface Listener {
-	close: () => void;
+	readonly close: () => void;
 }
 
 declare type ListenerCallback = () => void;
-declare type AddListener = (callback: ListenerCallback) => Listener;
+export declare type EventSource = (callback: ListenerCallback) => Listener;
 declare type NotifyListeners = () => void;
 
 // Create an event that will fire to all active listeners each time the event fires.
 // Listeners need to manually close themselves when they no longer want to receive events.
 // If renamed, must update .eslintrc.json with new name for exhaustive-deps to detect dependency issues.
-export const useEvent = (): [AddListener, NotifyListeners] => {
+export const useEvent = (): [EventSource, NotifyListeners] => {
 	const listeners = useRef<{ callback: ListenerCallback }[]>([]).current;
 
-	const addListener: AddListener = useCallback(
+	const eventSource: EventSource = useCallback(
 		(callback: ListenerCallback): Listener => {
 			const listener = { callback };
 			listeners.push(listener);
@@ -34,23 +34,19 @@ export const useEvent = (): [AddListener, NotifyListeners] => {
 		listeners.forEach(({ callback }) => callback());
 	}, [listeners]);
 
-	return [addListener, notifyListeners];
+	return [eventSource, notifyListeners];
 };
 
 // Hook that can be used to create a listener using the provided method.
 // The listener will call the provided callback when an event fires.
 // If renamed, must update .eslintrc.json with new name for exhaustive-deps to detect dependency issues.
-export const useListener = (
-	callback: () => void,
-	createListener: (callback: () => void) => Listener,
-	deps: DependencyList
-) => {
+export const useListener = (callback: () => void, deps: DependencyList, eventSource: EventSource) => {
 	const callbackRef = useRef(callback);
-	const createListenerRef = useRef(createListener);
+	const eventSourceRef = useRef(eventSource);
 	const cleanupRef = useRef<() => void>();
 
 	callbackRef.current = callback;
-	createListenerRef.current = createListener;
+	eventSourceRef.current = eventSource;
 
 	useEffect(() => {
 		const handleEvent = () => {
@@ -64,7 +60,7 @@ export const useListener = (
 			cleanupRef.current = typeof result === 'function' ? result : undefined;
 		};
 
-		const listener = createListenerRef.current(handleEvent);
+		const listener = eventSourceRef.current(handleEvent);
 
 		return () => {
 			listener.close();

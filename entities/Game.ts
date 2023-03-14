@@ -9,7 +9,6 @@ export default interface Game {
 	readonly players: ReadonlyArray<Player>;
 	currentPlayer: Player;
 	readonly nextPlayer: Player;
-	readonly ballsInPlay: number;
 	currentMode: Mode;
 	readonly currentModeStep: ModeStep | undefined;
 	readonly modeComplete: boolean;

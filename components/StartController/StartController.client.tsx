@@ -1,6 +1,6 @@
 import { GameContextProvider } from '../../contexts/GameContext/GameContext.client';
 import { selectButtonSwitch, startButtonSwitch } from '../../const/Switches/Switches';
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import GameController from '../GameController/GameController.client';
 import MachineContext from '../../contexts/MachineContext/MachineContext';
 import { maxPlayers } from '../../const/Constraints/Constraints';
@@ -12,6 +12,7 @@ import { useFlippers, useSwitch } from '../../lib/switch/switch';
 import { replaceItemAtIndex } from '../../lib/array/array';
 import { changeLetterAt } from '../../lib/string/string';
 import DebugView from 'components/DebugView/DebugView.client';
+import { useGameState } from 'lib/state/state';
 
 // This controller handles state and logic for starting a game, including:
 //  Displays slide to attract players.
@@ -21,9 +22,9 @@ const StartController = () => {
 	const machine = useContext(MachineContext);
 	const audio = useContext(AudioContext);
 	const { credits } = machine;
-	const [playerInitials, setPlayerInitials] = useState(['AAA']);
-	const [gameStarted, setGameStarted] = useState(!!autoStartGamePlayers);
-	const [selected, setSelected] = useState([0, 0]);
+	const [playerInitials, setPlayerInitials] = useGameState(['AAA']);
+	const [gameStarted, setGameStarted] = useGameState(!!autoStartGamePlayers);
+	const [selected, setSelected] = useGameState([0, 0]);
 	const selectingNumberOfPlayers = !selected[0];
 	const selectedPlayerIndex = selected[0] - 1;
 	const selectedInitialIndex = selected[1];
@@ -42,7 +43,7 @@ const StartController = () => {
 				}
 			}
 		},
-		[audio, creditsNeeded, creditsRequired, machine, gameStarted],
+		[gameStarted, creditsNeeded, audio, setGameStarted, machine, creditsRequired],
 		startButtonSwitch
 	);
 
@@ -76,7 +77,7 @@ const StartController = () => {
 				}
 			}
 		},
-		[selectedInitialIndex, selectedPlayerIndex, selectingNumberOfPlayers, gameStarted]
+		[gameStarted, selectingNumberOfPlayers, setPlayerInitials, selectedPlayerIndex, selectedInitialIndex]
 	);
 
 	// Update selection when selected button is pressed.
@@ -102,7 +103,7 @@ const StartController = () => {
 				}
 			});
 		},
-		[playerInitials, selectedInitialIndex, selectedPlayerIndex, selectingNumberOfPlayers],
+		[playerInitials, selectedInitialIndex, selectedPlayerIndex, selectingNumberOfPlayers, setSelected],
 		selectButtonSwitch
 	);
 

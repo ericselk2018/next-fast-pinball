@@ -1,25 +1,19 @@
 import modes, { ModeInfo, ModeStepInfo } from '../../const/Modes/Modes';
-import { clearProgressWhenNoBallsInPlay, startingBallsPerPlayer, startingScore } from '../../const/Rules/Rules';
-import {
-	kickerSwitches,
-	troughSwitches,
-	troughBallOneSwitch,
-	SwitchInfo,
-	plungerRolloverSwitch,
-} from '../../const/Switches/Switches';
+import { startingBallsPerPlayer, startingScore } from '../../const/Rules/Rules';
+import { kickerSwitches, troughSwitches, SwitchInfo, plungerRolloverSwitch } from '../../const/Switches/Switches';
 import Game from '../../entities/Game';
 import Mode from '../../entities/Mode';
 import ModeStep from '../../entities/ModeStep';
 import Player from '../../entities/Player';
 import Shot from '../../entities/Shot';
 import { filterUndefined, replaceItemAtIndex } from '../../lib/array/array';
-import { useSwitch, useToggleSwitches } from '../../lib/switch/switch';
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useToggleSwitches } from '../../lib/switch/switch';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo } from 'react';
 import HardwareContext from '../HardwareContext/HardwareContext';
-import { autoStartBallsInPlay, totalBallsInMachine } from 'const/Setup/Setup';
 import AudioContext from 'contexts/AudioContext/AudioContext.client';
 import { KickerInfo, kickers } from 'const/Kickers/Kickers';
-import { useEffectWithPreviousValue } from 'lib/react/react';
+import { useGameState } from 'lib/state/state';
+import MachineContext from 'contexts/MachineContext/MachineContext';
 
 export interface CompletedTask {
 	step: string;
@@ -38,27 +32,27 @@ export const GameContextProvider = ({
 	children: ReactNode;
 	playerInitials: string[];
 }) => {
+	const { ballsInPlay } = useContext(MachineContext);
 	const hardware = useContext(HardwareContext);
 	const audio = useContext(AudioContext);
 	const { targetSwitchInfoToTargetSwitch, isSwitchClosed } = hardware;
 	const alreadyClosedSwitchIds = ({ switches }: { switches: ReadonlyArray<SwitchInfo> }) =>
 		switches.filter((switchInfo) => isSwitchClosed({ switchInfo })).map((switchInfo) => switchInfo.id);
-	const [scores, setScores] = useState(Array(playerInitials.length).fill(startingScore));
-	const [totalBalls, setTotalBalls] = useState(Array(playerInitials.length).fill(startingBallsPerPlayer));
-	const [usedBalls, setUsedBalls] = useState(Array(playerInitials.length).fill(0));
-	const [modesCompleted, setModesCompleted] = useState<string[][]>(Array(playerInitials.length).fill([]));
-	const [currentModeIndex, setCurrentModeIndex] = useState(0);
-	const [tasksCompleted, setTasksCompleted] = useState<CompletedTask[]>([]);
-	const [shots, setShots] = useState<Shot[]>([]);
-	const [videoPlaying, setVideoPlaying] = useState('');
-	const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-	const [kickersWithBallsSwitchIds, setKickersWithBallsSwitchIds] = useState<number[]>(
+	const [scores, setScores] = useGameState(Array(playerInitials.length).fill(startingScore));
+	const [totalBalls, setTotalBalls] = useGameState(Array(playerInitials.length).fill(startingBallsPerPlayer));
+	const [usedBalls, setUsedBalls] = useGameState(Array(playerInitials.length).fill(0));
+	const [modesCompleted, setModesCompleted] = useGameState<string[][]>(Array(playerInitials.length).fill([]));
+	const [currentModeIndex, setCurrentModeIndex] = useGameState(0);
+	const [tasksCompleted, setTasksCompleted] = useGameState<CompletedTask[]>([]);
+	const [shots, setShots] = useGameState<Shot[]>([]);
+	const [videoPlaying, setVideoPlaying] = useGameState('');
+	const [currentPlayerIndex, setCurrentPlayerIndex] = useGameState(0);
+	const [kickersWithBallsSwitchIds, setKickersWithBallsSwitchIds] = useGameState<number[]>(
 		alreadyClosedSwitchIds({ switches: kickerSwitches })
 	);
-	const [troughSlotsWithBallsSwitchIds, setTroughSlotsWithBallsSwitchIds] = useState<number[]>(
+	const [troughSlotsWithBallsSwitchIds, setTroughSlotsWithBallsSwitchIds] = useGameState<number[]>(
 		alreadyClosedSwitchIds({ switches: troughSwitches })
 	);
-	const [ballsInPlay, setBallsInPlay] = useState(autoStartBallsInPlay);
 
 	// Keep some global variables updated for debug purposes, so we can inspect them in browser console easily.
 	useEffect(() => {
@@ -72,9 +66,8 @@ export const GameContextProvider = ({
 			troughSlotsWithBalls: troughSwitches
 				.filter((switchInfo) => troughSlotsWithBallsSwitchIds.includes(switchInfo.id))
 				.map((switchInfo) => switchInfo.name),
-			ballsInPlay,
 		};
-	}, [kickersWithBallsSwitchIds, troughSlotsWithBallsSwitchIds, ballsInPlay]);
+	}, [kickersWithBallsSwitchIds, troughSlotsWithBallsSwitchIds]);
 
 	const modeStepInfoToModeStep = useCallback(
 		(modeStepInfo: ModeStepInfo): ModeStep => {
@@ -103,7 +96,7 @@ export const GameContextProvider = ({
 					]),
 			};
 		},
-		[targetSwitchInfoToTargetSwitch, tasksCompleted]
+		[setTasksCompleted, targetSwitchInfoToTargetSwitch, tasksCompleted]
 	);
 
 	const modeInfoToMode = useCallback(
@@ -177,9 +170,12 @@ export const GameContextProvider = ({
 	const currentPlayer = players[currentPlayerIndex];
 	const nextPlayer = players[currentPlayerIndex + 1 === players.length ? 0 : currentPlayerIndex + 1];
 
-	const addShot = useCallback((shot: Shot) => {
-		setShots((shots) => [...shots, shot]);
-	}, []);
+	const addShot = useCallback(
+		(shot: Shot) => {
+			setShots((shots) => [...shots, shot]);
+		},
+		[setShots]
+	);
 
 	const kickersWithBalls = useMemo(() => {
 		return filterUndefined(
@@ -199,19 +195,19 @@ export const GameContextProvider = ({
 
 	// Kick all balls out of kickers when no balls in play and all balls are in kickers, or all kickers have balls.
 	// Start multi-ball.
-	useEffect(() => {
-		if (
-			(!ballsInPlay && kickersWithBalls.length === kickerSwitches.length) ||
-			kickersWithBalls.length === totalBallsInMachine
-		) {
-			kickersWithBalls.forEach((kickersWithBall) => {
-				const kicker = kickers.find((kicker) => kicker.switchInfo.id === kickersWithBall.id);
-				if (kicker) {
-					kickBall({ kicker });
-				}
-			});
-		}
-	}, [ballsInPlay, kickBall, kickersWithBalls]);
+	// useEffect(() => {
+	// 	if (
+	// 		(!ballsInPlay && kickersWithBalls.length === kickerSwitches.length) ||
+	// 		kickersWithBalls.length === totalBallsInMachine
+	// 	) {
+	// 		kickersWithBalls.forEach((kickersWithBall) => {
+	// 			const kicker = kickers.find((kicker) => kicker.switchInfo.id === kickersWithBall.id);
+	// 			if (kicker) {
+	// 				kickBall({ kicker });
+	// 			}
+	// 		});
+	// 	}
+	// }, [ballsInPlay, kickBall, kickersWithBalls]);
 
 	// Apply logic when balls enter or exit kickers.
 	useToggleSwitches(
@@ -247,26 +243,26 @@ export const GameContextProvider = ({
 				return kickersWithBallsSwitchIds.filter((n) => n !== id);
 			});
 		},
-		[audio, currentModeStep?.switches, kickBall],
+		[audio, currentModeStep?.switches, kickBall, setKickersWithBallsSwitchIds],
 		kickerSwitches
 	);
 
 	// Update balls in play value whenever balls enter or exit kickers.
-	useEffectWithPreviousValue(
-		(previousKickersWithBallsSwitchIdsLength) => {
-			const difference = kickersWithBallsSwitchIds.length - previousKickersWithBallsSwitchIdsLength;
-			if (difference) {
-				setBallsInPlay((ballsInPlay) => {
-					console.log(
-						`balls in holes changed by ${difference}, setting balls in play to ${ballsInPlay - difference}`
-					);
-					return ballsInPlay - difference;
-				});
-			}
-		},
-		[kickersWithBallsSwitchIds.length],
-		kickersWithBallsSwitchIds.length
-	);
+	// useEffectWithPreviousValue(
+	// 	(previousKickersWithBallsSwitchIdsLength) => {
+	// 		const difference = kickersWithBallsSwitchIds.length - previousKickersWithBallsSwitchIdsLength;
+	// 		if (difference) {
+	// 			setBallsInPlay((ballsInPlay) => {
+	// 				console.log(
+	// 					`balls in holes changed by ${difference}, setting balls in play to ${ballsInPlay - difference}`
+	// 				);
+	// 				return ballsInPlay - difference;
+	// 			});
+	// 		}
+	// 	},
+	// 	[kickersWithBallsSwitchIds.length, setBallsInPlay],
+	// 	kickersWithBallsSwitchIds.length
+	// );
 
 	// Keep track of balls in trough.
 	// REVIEW: Currently we only actually care about ball slot one, so we should just track that if nothing else used.
@@ -284,22 +280,8 @@ export const GameContextProvider = ({
 				}
 			});
 		},
-		[],
+		[setTroughSlotsWithBallsSwitchIds],
 		troughSwitches
-	);
-
-	// Anytime the last/highest trough switch is hit, a ball drained.
-	// PLAY-TEST: Can a ball ever go backwards in the trough?  If so, this logic will not work.
-	// PLAY-TEST: Can two balls ever pass over this switch fast enough that it doesn't toggle in between?  If so, this logic will not work.
-	useSwitch(
-		() => {
-			setBallsInPlay((ballsInPlay) => {
-				console.log(`ball drained, setting balls in play to ${ballsInPlay - 1}`);
-				return ballsInPlay - 1;
-			});
-		},
-		[],
-		troughSwitches[troughSwitches.length - 1]
 	);
 
 	const modeComplete = useMemo(() => {
@@ -307,26 +289,11 @@ export const GameContextProvider = ({
 	}, [ballsInPlay, currentModeStep]);
 
 	// Clear completed tasks anytime no balls are in play, unless disabled by rule and we haven't completed all steps.
-	useEffect(() => {
-		if (!ballsInPlay && (clearProgressWhenNoBallsInPlay || !currentModeStep)) {
-			setTasksCompleted([]);
-		}
-	}, [ballsInPlay, currentModeStep]);
-
-	// Eject ball whenever no balls in play, and one is ready to eject.
-	useEffect(() => {
-		setBallsInPlay((ballsInPlay) => {
-			if (!ballsInPlay && troughSlotsWithBallsSwitchIds.includes(troughBallOneSwitch.id)) {
-				setCurrentPlayerIndex(players.indexOf(nextPlayer));
-				hardware.ejectBall();
-				audio.play({ name: 'shot' });
-				console.log(`ball ejected, setting balls in play to ${ballsInPlay + 1}`);
-				return ballsInPlay + 1;
-			}
-			console.log(`ball not ejected, leaving balls in play at ${ballsInPlay}`);
-			return ballsInPlay;
-		});
-	}, [audio, hardware, nextPlayer, players, troughSlotsWithBallsSwitchIds]);
+	// useEffect(() => {
+	// 	if (!ballsInPlay && (clearProgressWhenNoBallsInPlay || !currentModeStep)) {
+	// 		setTasksCompleted([]);
+	// 	}
+	// }, [ballsInPlay, currentModeStep, setTasksCompleted]);
 
 	const waitingForLaunch = useMemo(() => {
 		return !ballsInPlay || (ballsInPlay === 1 && isSwitchClosed({ switchInfo: plungerRolloverSwitch }));
@@ -337,7 +304,6 @@ export const GameContextProvider = ({
 			waitingForLaunch,
 			kickersWithBalls,
 			modes: modes.map(modeInfoToMode),
-			ballsInPlay,
 			currentModeStep,
 			currentModeIndex,
 			get currentMode() {
@@ -368,21 +334,23 @@ export const GameContextProvider = ({
 		}),
 		[
 			waitingForLaunch,
-			addShot,
-			ballsInPlay,
-			currentMode,
-			currentModeIndex,
-			currentModeStep,
-			currentPlayer,
-			kickBall,
 			kickersWithBalls,
-			modeComplete,
 			modeInfoToMode,
-			nextPlayer,
+			currentModeStep,
+			currentModeIndex,
 			players,
+			nextPlayer,
 			shots,
-			videoPlaying,
+			addShot,
+			kickBall,
+			modeComplete,
 			tasksCompleted,
+			currentMode,
+			setCurrentModeIndex,
+			currentPlayer,
+			setCurrentPlayerIndex,
+			videoPlaying,
+			setVideoPlaying,
 		]
 	);
 

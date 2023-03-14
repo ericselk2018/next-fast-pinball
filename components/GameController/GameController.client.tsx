@@ -6,13 +6,15 @@ import { useContext, useEffect } from 'react';
 import GameStatus from '../GameStatus/GameStatus';
 import ModeSlide from '../Slides/ModeSlide/ModeSlide.client';
 import * as S from './GameController.styles';
+import MachineContext from 'contexts/MachineContext/MachineContext';
 
 // StartController renders this after game is started.
 // We now have access to GameContext, and any components we render also can access it.
 const GameController = () => {
 	const { enableFlippers, disableFlippers } = useContext(HardwareContext);
+	const { ballsInPlay } = useContext(MachineContext);
 	const game = useContext(GameContext);
-	const { ballsInPlay, modes, currentModeIndex, currentModeStep, waitingForLaunch } = game;
+	const { modes, currentModeIndex, currentModeStep, waitingForLaunch } = game;
 	const incompleteSwitches = currentModeStep?.incompleteSwitches || [];
 
 	// Switch modes using flippers whenever in waiting for launch state.

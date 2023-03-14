@@ -1,12 +1,13 @@
 import { coinDoorSwitch } from 'const/Switches/Switches';
 import GameContext from 'contexts/GameContext/GameContext.client';
+import MachineContext from 'contexts/MachineContext/MachineContext';
+import { useGameState } from 'lib/state/state';
 import { useToggleSwitches } from 'lib/switch/switch';
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import * as S from './DebugView.styles';
 
 const DebugView = () => {
 	const {
-		ballsInPlay,
 		currentMode,
 		currentModeStep,
 		currentPlayer,
@@ -16,13 +17,14 @@ const DebugView = () => {
 		waitingForLaunch,
 		tasksCompleted,
 	} = useContext(GameContext);
-	const [showing, setShowing] = useState(true);
+	const { ballsInPlay } = useContext(MachineContext);
+	const [showing, setShowing] = useGameState(true);
 
 	useToggleSwitches(
 		({ closed }) => {
 			setShowing(!closed);
 		},
-		[],
+		[setShowing],
 		[coinDoorSwitch]
 	);
 

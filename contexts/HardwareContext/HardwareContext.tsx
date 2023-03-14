@@ -14,7 +14,7 @@ import Switch from '../../entities/Switch';
 import TargetSwitch from '../../entities/TargetSwitch';
 import FastWriter from '../../lib/FastWriter/FastWriter';
 import { bitTest } from '../../lib/math/math';
-import { createContext, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import switches, {
 	plungerRolloverSwitch,
 	SwitchInfo,
@@ -25,6 +25,7 @@ import switches, {
 import { SlingshotInfo, slingshots } from 'const/Slingshots/Slingshots';
 import { KickerInfo, kickers } from 'const/Kickers/Kickers';
 import { BumperInfo, bumpers } from 'const/Bumpers/Bumpers';
+import { useGameState } from 'lib/state/state';
 
 // These will need to be adjusted if FAST changes these.
 const usbVendorId = 11914;
@@ -42,11 +43,11 @@ interface SwitchHitEventHandler {
 const HardwareContext = createContext<Hardware>(null!);
 
 export const HardwareContextProvider = ({ children }: { children: ReactNode }) => {
-	const [lastError, setLastError] = useState<Error>();
+	const [lastError, setLastError] = useGameState<Error>();
 	const received = useRef('');
-	const [permissionRequired, setPermissionRequired] = useState(false);
-	const [usingVirtualHardware, setUsingVirtualHardware] = useState(useVirtualHardware);
-	const [bootDone, setBootDone] = useState(usingVirtualHardware);
+	const [permissionRequired, setPermissionRequired] = useGameState(false);
+	const [usingVirtualHardware, setUsingVirtualHardware] = useGameState(useVirtualHardware);
+	const [bootDone, setBootDone] = useGameState(usingVirtualHardware);
 	const defaultSwitchesClosed = Array<boolean>(Math.max(...switches.map((aSwitch) => aSwitch.id)))
 		.fill(false)
 		.map((_, switchId) => {
@@ -54,7 +55,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			const closed = !!virtualClosedAtStartSwitches.find((switchInfo) => switchInfo.id === switchId);
 			return switchInfo?.normallyClosed ? !closed : closed;
 		});
-	const [switchesClosed, setSwitchesClosed] = useState(defaultSwitchesClosed);
+	const [switchesClosed, setSwitchesClosed] = useGameState(defaultSwitchesClosed);
 	const switchHitEventHandlers = useRef<SwitchHitEventHandler[]>([]);
 	const portWriter = useRef<WritableStreamDefaultWriter>();
 	const opening = useRef(false);
@@ -251,7 +252,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				console.error(`you need to add switch ID ${switchId} to Switches.switches`);
 			}
 		},
-		[notifySwitchHitEventHandlers]
+		[notifySwitchHitEventHandlers, setSwitchesClosed]
 	);
 
 	const open = useCallback(
@@ -335,7 +336,9 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			configureSlingshot,
 			disableFlippers,
 			fastWriter,
+			setLastError,
 			setSwitchClosed,
+			setSwitchesClosed,
 			switchesClosed,
 		]
 	);
@@ -375,7 +378,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 					setBootDone(true);
 				});
 		}
-	}, [lastError, open, usingVirtualHardware]);
+	}, [lastError, open, setBootDone, setLastError, setPermissionRequired, usingVirtualHardware]);
 
 	// Handle retry after error.  Just waits 3 seconds and then tries again.
 	useEffect(() => {
@@ -386,7 +389,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 			}, 3000);
 			return () => clearTimeout(timeout);
 		}
-	}, [lastError]);
+	}, [lastError, setLastError]);
 
 	// Watch keyboard events while using virtual hardware.
 	useEffect(() => {
@@ -423,7 +426,7 @@ export const HardwareContextProvider = ({ children }: { children: ReactNode }) =
 				document.removeEventListener('keyup', handleKeyUp);
 			};
 		}
-	}, [notifySwitchHitEventHandlers, usingVirtualHardware]);
+	}, [notifySwitchHitEventHandlers, setSwitchesClosed, usingVirtualHardware]);
 
 	const switchInfoToSwitch = useCallback(
 		(switchInfo: SwitchInfo): Switch => {

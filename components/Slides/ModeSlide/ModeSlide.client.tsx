@@ -3,6 +3,7 @@ import { useContext, useEffect, useRef } from 'react';
 import * as S from './ModeSlide.styles';
 import GameContext from 'contexts/GameContext/GameContext.client';
 import Blink from 'components/Blink/Blink.client';
+import MachineContext from 'contexts/MachineContext/MachineContext';
 
 interface Props {
 	active: boolean;
@@ -10,7 +11,8 @@ interface Props {
 }
 
 const ModeSlide = (props: Props) => {
-	const { ballsInPlay, waitingForLaunch, currentModeStep, modeComplete, kickersWithBalls } = useContext(GameContext);
+	const { ballsInPlay } = useContext(MachineContext);
+	const { waitingForLaunch, currentModeStep, modeComplete, kickersWithBalls } = useContext(GameContext);
 	const { active, mode } = props;
 	const { name, video, steps } = mode;
 	const videoElement = useRef<HTMLVideoElement>(null);
