@@ -40,6 +40,7 @@ const StartController = () => {
 				} else {
 					setGameStarted(true);
 					machine.credits -= creditsRequired;
+					machine.startGame();
 				}
 			}
 		},
