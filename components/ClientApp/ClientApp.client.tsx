@@ -1,4 +1,5 @@
 'use client';
+import modes from 'const/Modes/Modes';
 import { autoStartGamePlayers } from 'const/Setup/Setup';
 import engine, { requestPort } from 'engine/engine';
 import { useEffect, useState } from 'react';
@@ -15,7 +16,11 @@ const ClientApp = () => {
 	const [status, setStatus] = useState('loading');
 	const [ballsInPlay, setBallsInPlay] = useState(0);
 	const [error, setError] = useState('');
+	const [currentPlayerId, setCurrentPlayerId] = useState(0);
+	const [ballsUsedPerPlayer, setBallsUsedPerPlayer] = useState<number[]>([]);
 	const [requestingPort, setRequestingPort] = useState(false);
+	const [currentModeId, setCurrentModeId] = useState(0);
+	const currentMode = modes[currentModeId];
 
 	useEffect(() => {
 		const abortController = new AbortController();
@@ -24,6 +29,9 @@ const ClientApp = () => {
 			onStatusChange: setStatus,
 			onBallsInPlayChange: setBallsInPlay,
 			onErrorChange: setError,
+			onCurrentPlayerIdChange: setCurrentPlayerId,
+			onBallsUsedPerPlayerChange: setBallsUsedPerPlayer,
+			onCurrentModeIdChange: setCurrentModeId,
 			onRequestPort: () => setRequestingPort(true),
 		});
 		return () => abortController.abort();
@@ -52,6 +60,18 @@ const ClientApp = () => {
 					<tr>
 						<td>Balls In Play</td>
 						<td>{ballsInPlay}</td>
+					</tr>
+					<tr>
+						<td>Current Player ID</td>
+						<td>{currentPlayerId}</td>
+					</tr>
+					<tr>
+						<td>Balls Used Per Player</td>
+						<td>{ballsUsedPerPlayer.join(', ')}</td>
+					</tr>
+					<tr>
+						<td>Current Mode</td>
+						<td>{currentMode.name}</td>
 					</tr>
 					<tr>
 						<td>Error</td>

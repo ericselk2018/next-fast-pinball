@@ -2,10 +2,13 @@ import { BumperInfo, bumpers } from 'const/Bumpers/Bumpers';
 import { CoilInfo, troughBallEjectCoil } from 'const/Coils/Coils';
 import flippers, { FlipperInfo } from 'const/Flippers/Flippers';
 import { KickerInfo, kickers } from 'const/Kickers/Kickers';
+import modes from 'const/Modes/Modes';
 import { totalBallsInMachine } from 'const/Setup/Setup';
 import { SlingshotInfo, slingshots } from 'const/Slingshots/Slingshots';
 import switches, {
+	leftFlipperButtonSwitch,
 	plungerRolloverSwitch,
+	rightFlipperButtonSwitch,
 	startButtonSwitch,
 	troughBallFiveSwitch,
 	troughBallOneSwitch,
@@ -15,7 +18,13 @@ import FastWriter from 'lib/FastWriter/FastWriter';
 import { bitTest } from 'lib/math/math';
 import observable from 'lib/observable/observable';
 
-export declare type Status = 'starting' | 'readyToPlay' | 'playing' | 'waitingForLaunch';
+export declare type Status =
+	| 'starting'
+	| 'readyToPlay'
+	| 'playing'
+	| 'waitingForLaunch'
+	| 'gameOver'
+	| 'waitingForNextPlayer';
 
 // These will need to be adjusted if FAST changes these.
 const usbVendorId = 11914;
@@ -33,9 +42,21 @@ const engine = async (args: {
 	onStatusChange: OnChange<Status>;
 	onBallsInPlayChange: OnChange<number>;
 	onErrorChange: OnChange<string>;
+	onCurrentPlayerIdChange: OnChange<number>;
+	onBallsUsedPerPlayerChange: OnChange<number[]>;
+	onCurrentModeIdChange: OnChange<number>;
 	onRequestPort: () => void;
 }) => {
-	const { onStatusChange, onBallsInPlayChange, onErrorChange, onRequestPort, abortSignal } = args;
+	const {
+		abortSignal,
+		onStatusChange,
+		onBallsInPlayChange,
+		onErrorChange,
+		onCurrentPlayerIdChange,
+		onBallsUsedPerPlayerChange,
+		onCurrentModeIdChange,
+		onRequestPort,
+	} = args;
 	const ports = await navigator.serial.getPorts();
 	if (abortSignal.aborted) {
 		return;
@@ -52,11 +73,52 @@ const engine = async (args: {
 		return;
 	}
 
+	const handleStatusChange = (status: Status) => {
+		onStatusChange(status);
+		enableOrDisableFlippers({ enable: status !== 'waitingForLaunch' && !!ballsInPlay.get() });
+	};
+
+	const handleBallsInPlayChange = (ballsInPlay: number) => {
+		onBallsInPlayChange(ballsInPlay);
+		enableOrDisableFlippers({ enable: status.get() !== 'waitingForLaunch' && !!ballsInPlay });
+	};
+
+	const maxModeId = modes.length - 1;
+	const ballSaveTimeInSeconds = 5;
+	const ballsPerPlayer = 2;
+	const playerCount = 2;
+	const maxPlayerId = playerCount - 1;
 	const writer = port.writable.getWriter();
 	const switchesClosed = Array<boolean>(Math.max(...switches.map((aSwitch) => aSwitch.id)) + 1).fill(false);
-	const ballsInPlay = observable({ initialValue: 0, onChange: onBallsInPlayChange });
-	const status = observable({ initialValue: 'starting', onChange: onStatusChange });
+	const switchesHitThisTurn: number[] = [];
+	const modeStepSwitchesHitThisTurn: number[] = [];
+
+	const ballsInPlay = observable({ initialValue: 0, onChange: handleBallsInPlayChange });
+	const status = observable({ initialValue: 'starting', onChange: handleStatusChange });
 	const error = observable({ initialValue: '', onChange: onErrorChange });
+	const currentPlayerId = observable({
+		initialValue: 0,
+		onChange: onCurrentPlayerIdChange,
+		max: maxPlayerId,
+		min: 0,
+	});
+	const ballsUsedPerPlayer = observable({
+		initialValue: Array(playerCount).fill(0),
+		onChange: onBallsUsedPerPlayerChange,
+	});
+	const currentModeId = observable({
+		initialValue: 0,
+		onChange: onCurrentModeIdChange,
+		max: maxModeId,
+		min: 0,
+	});
+
+	const currentMode = modes[currentModeId.get()];
+
+	const kickersWithBalls: KickerInfo[] = [];
+
+	let flippersEnabled = true;
+	let turnStartTimeInMilliseconds = Date.now();
 
 	const handleSwitchesChanged = () => {
 		const nonDefaultStateSwitches = switches
@@ -113,10 +175,13 @@ const engine = async (args: {
 						} else if (line.startsWith('/L:') || line.startsWith('-L:')) {
 							const closed = line[0] === '-';
 							const switchId = parseInt(line.substring('/L:'.length), 16);
-							console.log(
-								`switch ${switches.find((s) => s.id === switchId)?.name} ${closed ? 'closed' : 'open'}`
-							);
+							const switchInfo = switches.find((s) => s.id === switchId);
+							const hit = !!switchInfo?.normallyClosed !== closed;
+							console.log(`switch ${switchInfo?.name} ${closed ? 'closed' : 'open'} ${hit ? 'hit' : ''}`);
 							switchesClosed[switchId] = closed;
+							if (hit && !switchesHitThisTurn.includes(switchId)) {
+								switchesHitThisTurn.push(switchId);
+							}
 							if (status.get() === 'starting') {
 								handleSwitchesChanged();
 							} else if (status.get() === 'readyToPlay') {
@@ -128,24 +193,170 @@ const engine = async (args: {
 									status.set('playing');
 									tapCoil({ coil: troughBallEjectCoil });
 									ballsInPlay.set(1);
+									ballsUsedPerPlayer.increment(currentPlayerId.get());
+									turnStartTimeInMilliseconds = Date.now();
+									switchesHitThisTurn.length = 0;
+									modeStepSwitchesHitThisTurn.length = 0;
+								}
+							} else if (status.get() === 'gameOver') {
+								if (
+									switchId === startButtonSwitch.id &&
+									switchesClosed[troughBallOneSwitch.id] !== troughBallOneSwitch.normallyClosed
+								) {
+									status.set('starting');
+									handleSwitchesChanged();
+									currentPlayerId.set(0);
+									ballsUsedPerPlayer.fill(0);
+								}
+							} else if (status.get() === 'waitingForNextPlayer') {
+								if (
+									switchId === startButtonSwitch.id &&
+									switchesClosed[troughBallOneSwitch.id] !== troughBallOneSwitch.normallyClosed
+								) {
+									status.set('playing');
+									tapCoil({ coil: troughBallEjectCoil });
+									ballsInPlay.set(1);
+									ballsUsedPerPlayer.increment(currentPlayerId.get());
+									turnStartTimeInMilliseconds = Date.now();
+									switchesHitThisTurn.length = 0;
+									modeStepSwitchesHitThisTurn.length = 0;
 								}
 							} else {
+								const modeSteps = currentMode.steps.map((step) => {
+									return {
+										...step,
+										switches: step.switches.map((switchInfo) => ({
+											...switchInfo,
+											hit: modeStepSwitchesHitThisTurn.includes(switchInfo.id),
+										})),
+									};
+								});
+								const currentModeStep = modeSteps.find(
+									(step) => step.switches.filter((sw) => sw.hit).length < (step.count || 1)
+								);
+								const isModeStepTarget =
+									hit && currentModeStep?.switches.some((s) => s.id === switchId);
+								if (isModeStepTarget) {
+									modeStepSwitchesHitThisTurn.push(switchId);
+								}
+
+								// Drain
 								if (
 									switchId === troughBallFiveSwitch.id &&
 									closed !== troughBallFiveSwitch.normallyClosed
 								) {
-									ballsInPlay.set(ballsInPlay.get() - 1);
+									ballsInPlay.decrement();
+
+									// Draining a ball causes all kickers to eject.
+									kickersWithBalls.forEach((kicker) => {
+										tapCoil({ coil: kicker.coil });
+									});
+									kickersWithBalls.length = 0;
+
+									// Last ball drained
+									if (!ballsInPlay.get()) {
+										// Ball save - bad day?
+										const turnDurationInSeconds = (Date.now() - turnStartTimeInMilliseconds) / 1000;
+										if (turnDurationInSeconds < ballSaveTimeInSeconds) {
+											// Return the ball, was not actually used.
+											ballsUsedPerPlayer.decrement(currentPlayerId.get());
+
+											// nothing else to do here for now, code below will eject ball when possible
+										}
+
+										// All balls used, game over
+										else if (
+											currentPlayerId.get() === maxPlayerId &&
+											ballsUsedPerPlayer.get(currentPlayerId.get()) === ballsPerPlayer
+										) {
+											status.set('gameOver');
+											return;
+										} else {
+											// Next player
+											currentPlayerId.increment();
+											status.set('waitingForNextPlayer');
+											return;
+										}
+									}
 								}
 
+								// Track waiting for launch
 								const ballAtPlunger =
 									switchesClosed[plungerRolloverSwitch.id] !== plungerRolloverSwitch.normallyClosed;
 								status.set(ballAtPlunger && ballsInPlay.get() === 1 ? 'waitingForLaunch' : 'playing');
+
+								// Allow mode select while waiting for launch
+								if (status.get() === 'waitingForLaunch') {
+									if (hit && switchId === leftFlipperButtonSwitch.id) {
+										currentModeId.decrement();
+									} else if (hit && switchId === rightFlipperButtonSwitch.id) {
+										currentModeId.increment();
+									}
+								}
+
+								// When a ball goes in or out of a kicker...
+								const kickerIndex = kickers.findIndex((k) => k.switchInfo.id === switchId);
+								if (kickerIndex !== -1) {
+									const kicker = kickers[kickerIndex];
+									console.log({
+										kicker,
+										currentModeStep,
+										modeSteps,
+										switchesHitThisTurn,
+										modeStepSwitchesHitThisTurn,
+									});
+									if (hit) {
+										// If kicker is a target...
+										if (isModeStepTarget) {
+											// If all balls are in kickers, or all kickers are full, we kick them all out.
+											if (
+												ballsInPlay.get() === totalBallsInMachine ||
+												kickersWithBalls.length === kickers.length
+											) {
+												tapCoil({ coil: kicker.coil });
+												kickersWithBalls.forEach((kicker) => {
+													tapCoil({ coil: kicker.coil });
+												});
+												kickersWithBalls.length = 0;
+											} else {
+												// Kicker is going to hold the ball.
+												// Code below will handle ejecting next ball when possible.
+												kickersWithBalls.push(kicker);
+
+												// REVIEW: Will we have a mode where the kicker isn't the final step?
+												// Final mode of step complete, so reset.
+												modeStepSwitchesHitThisTurn.length = 0;
+											}
+										} else {
+											// PLAY-TEST: need to handle a scenario where the tap doesn't even trigger the switch to open
+											//  so the ball could stay in the kicker and we wouldn't know?
+											tapCoil({ coil: kicker.coil });
+										}
+									} else {
+										// Most of the time the item has already been removed from this array, when we
+										//  tapped the coil to eject the ball.  The only time it is still in this array
+										//  would be if a ball comes out of a hole without us kicking it out.
+										const index = kickersWithBalls.indexOf(kicker);
+										if (index !== -1) {
+											kickersWithBalls.splice(index, 1);
+										}
+									}
+								}
+
+								// Eject - Use Ball, whenever none in play or all in kickers
 								if (
 									switchesClosed[troughBallOneSwitch.id] !== troughBallOneSwitch.normallyClosed &&
-									!ballsInPlay.get()
+									!(ballsInPlay.get() - kickersWithBalls.length)
 								) {
 									tapCoil({ coil: troughBallEjectCoil });
-									ballsInPlay.set(ballsInPlay.get() + 1);
+
+									// It only counts as using a new ball when ejected without any balls in play,
+									//  otherwise it is a bonus ball being ejected, part of a multi-ball.
+									if (!ballsInPlay.get()) {
+										ballsUsedPerPlayer.increment(currentPlayerId.get());
+									}
+
+									ballsInPlay.increment();
 								}
 							}
 						}
@@ -195,15 +406,19 @@ const engine = async (args: {
 
 	const enableOrDisableFlippers = (args: { enable: boolean }) => {
 		const { enable } = args;
+		if (flippersEnabled === enable) {
+			return;
+		}
+		flippersEnabled = enable;
 		for (const flipper of flippers) {
 			enableOrDisableCoil({ enable, coil: flipper.mainCoil });
 			enableOrDisableCoil({ enable, coil: flipper.holdCoil });
 		}
 	};
 
-	const enableFlippers = () => {
-		enableOrDisableFlippers({ enable: true });
-	};
+	// const enableFlippers = () => {
+	// 	enableOrDisableFlippers({ enable: true });
+	// };
 
 	const disableFlippers = () => {
 		enableOrDisableFlippers({ enable: false });
@@ -319,10 +534,7 @@ const engine = async (args: {
 		}
 	}, 500);
 
-	if (hardwareModel + 12 === 123) {
-		await disableFlippers();
-		await enableFlippers();
-	}
+	await disableFlippers();
 };
 
 export default engine;
