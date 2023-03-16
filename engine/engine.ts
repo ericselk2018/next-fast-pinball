@@ -10,6 +10,7 @@ import switches, {
 	plungerRolloverSwitch,
 	rightFlipperButtonSwitch,
 	startButtonSwitch,
+	SwitchInfo,
 	troughBallFiveSwitch,
 	troughBallOneSwitch,
 	troughSwitches,
@@ -143,6 +144,8 @@ const engine = async (args: {
 		}
 	};
 
+	const isHit = (switchInfo: SwitchInfo) => switchesClosed[switchInfo.id] !== switchInfo.normallyClosed;
+
 	let received = '';
 	port.readable.pipeTo(
 		new WritableStream({
@@ -187,7 +190,7 @@ const engine = async (args: {
 							} else if (status.get() === 'readyToPlay') {
 								if (
 									switchId === startButtonSwitch.id &&
-									switchesClosed[troughBallOneSwitch.id] !== troughBallOneSwitch.normallyClosed &&
+									isHit(troughBallOneSwitch) &&
 									!ballsInPlay.get()
 								) {
 									status.set('playing');
@@ -199,20 +202,14 @@ const engine = async (args: {
 									modeStepSwitchesHitThisTurn.length = 0;
 								}
 							} else if (status.get() === 'gameOver') {
-								if (
-									switchId === startButtonSwitch.id &&
-									switchesClosed[troughBallOneSwitch.id] !== troughBallOneSwitch.normallyClosed
-								) {
+								if (switchId === startButtonSwitch.id && isHit(troughBallOneSwitch)) {
 									status.set('starting');
 									handleSwitchesChanged();
 									currentPlayerId.set(0);
 									ballsUsedPerPlayer.fill(0);
 								}
 							} else if (status.get() === 'waitingForNextPlayer') {
-								if (
-									switchId === startButtonSwitch.id &&
-									switchesClosed[troughBallOneSwitch.id] !== troughBallOneSwitch.normallyClosed
-								) {
+								if (switchId === startButtonSwitch.id && isHit(troughBallOneSwitch)) {
 									status.set('playing');
 									tapCoil({ coil: troughBallEjectCoil });
 									ballsInPlay.set(1);
@@ -278,8 +275,7 @@ const engine = async (args: {
 								}
 
 								// Track waiting for launch
-								const ballAtPlunger =
-									switchesClosed[plungerRolloverSwitch.id] !== plungerRolloverSwitch.normallyClosed;
+								const ballAtPlunger = isHit(plungerRolloverSwitch);
 								status.set(ballAtPlunger && ballsInPlay.get() === 1 ? 'waitingForLaunch' : 'playing');
 
 								// Allow mode select while waiting for launch
@@ -341,10 +337,7 @@ const engine = async (args: {
 								}
 
 								// Eject - Use Ball, whenever none in play or all in kickers
-								if (
-									switchesClosed[troughBallOneSwitch.id] !== troughBallOneSwitch.normallyClosed &&
-									!(ballsInPlay.get() - kickersWithBalls.length)
-								) {
+								if (isHit(troughBallOneSwitch) && !(ballsInPlay.get() - kickersWithBalls.length)) {
 									tapCoil({ coil: troughBallEjectCoil });
 
 									// It only counts as using a new ball when ejected without any balls in play,
