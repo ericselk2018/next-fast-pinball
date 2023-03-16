@@ -219,22 +219,31 @@ const engine = async (args: {
 									modeStepSwitchesHitThisTurn.length = 0;
 								}
 							} else {
-								const modeSteps = currentMode.steps.map((step) => {
-									return {
-										...step,
-										switches: step.switches.map((switchInfo) => ({
-											...switchInfo,
-											hit: modeStepSwitchesHitThisTurn.includes(switchInfo.id),
-										})),
-									};
-								});
-								const currentModeStep = modeSteps.find(
-									(step) => step.switches.filter((sw) => sw.hit).length < (step.count || 1)
-								);
+								const getCurrentModeStep = () => {
+									const modeSteps = currentMode.steps.map((step) => {
+										return {
+											...step,
+											switches: step.switches.map((switchInfo) => ({
+												...switchInfo,
+												hit: modeStepSwitchesHitThisTurn.includes(switchInfo.id),
+											})),
+										};
+									});
+									const currentModeStep = modeSteps.find(
+										(step) => step.switches.filter((sw) => sw.hit).length < (step.count || 1)
+									);
+									return currentModeStep;
+								};
+								const currentModeStep = getCurrentModeStep();
 								const isModeStepTarget =
 									hit && currentModeStep?.switches.some((s) => s.id === switchId);
 								if (isModeStepTarget) {
 									modeStepSwitchesHitThisTurn.push(switchId);
+
+									const currentModeStep = getCurrentModeStep();
+									if (!currentModeStep) {
+										// TODO: handle mode complete
+									}
 								}
 
 								// Drain
@@ -294,7 +303,6 @@ const engine = async (args: {
 									console.log({
 										kicker,
 										currentModeStep,
-										modeSteps,
 										switchesHitThisTurn,
 										modeStepSwitchesHitThisTurn,
 									});
