@@ -241,10 +241,7 @@ const engine = async (args: {
 								}
 
 								// Drain
-								if (
-									switchId === troughBallFiveSwitch.id &&
-									closed !== troughBallFiveSwitch.normallyClosed
-								) {
+								if (switchId === troughBallFiveSwitch.id && hit) {
 									ballsInPlay.decrement();
 
 									// Draining a ball causes all kickers to eject.
